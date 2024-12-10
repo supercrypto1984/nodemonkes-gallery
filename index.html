@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,28 +7,35 @@
     <style>
         body { 
             font-family: Arial, sans-serif; 
-            margin: 40px;
-            max-width: 1400px;
-            margin: 40px auto;
+            margin: 0;
+            padding: 0;
             background-color: black;
             color: white;
         }
+        .header-frame {
+            width: 100%;
+            height: 180px;
+            background: black;
+            margin-bottom: 20px;
+        }
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
         h2 { 
             font-size: 36px; 
-            color: #666; 
-            margin-top: 10px;
-            padding: 0 20px;
             color: white;
+            margin: 20px 0;
         }
         .search-container {
             margin: 20px 0;
             padding: 20px;
-            background: white;
+            background: #f8f8f8;
             border-radius: 8px;
             display: flex;
             gap: 10px;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .search-container select,
         .search-container input {
@@ -48,17 +55,9 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            transition: background-color 0.2s;
         }
         .search-container button:hover {
             background: #555;
-        }
-        .table-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow-x: auto;
         }
         table { 
             width: 100%; 
@@ -75,18 +74,16 @@
             background: #f8f8f8;
         }
         th { 
-            background: #f8f8f8; 
             position: sticky;
             top: 0;
             font-weight: 600;
             color: #333;
-        }
-        tr:hover {
-            background-color: #f9f9f9;
+            z-index: 1;
         }
         td {
             overflow: hidden;
             word-wrap: break-word;
+            color: #333;
         }
         th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
         th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
@@ -102,9 +99,6 @@
             height: 100px;
             display: flex;
             flex-direction: column;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .color-segment {
             width: 100%;
@@ -115,8 +109,6 @@
             width: 112px;
             height: 112px;
             display: block;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .script-pubkey {
             font-family: monospace;
@@ -135,41 +127,36 @@
         .monke-image.error {
             display: none;
         }
-        .traits-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .trait-tag {
-            background: #f0f0f0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #666;
-        }
     </style>
 </head>
 <body>
-    <iframe src="https://337a66d9c3661a4d7ca59783ba770655.ipfs.4everland.link/ipfs/bafkreiflvn4gws6xvbcr64qcgfqtgb5qcskdphwgmnhoce2kykxzm5ajmq" width="100%" height="100" frameborder="0" scrolling="no" style="background: black;"></iframe>
-    <h2 id="bodyTitle">全部类型</h2>
-    <div class="search-container">
-        <select id="bodyFilter" onchange="filterMonkes()">
-            <option value="all">全部类型</option>
-        </select>
-        <input type="text" id="search" placeholder="搜索 ID 或铭文号..." onkeyup="filterMonkes()">
-        <button onclick="filterMonkes()">搜索</button>
-    </div>
-    <div class="table-container">
+    <iframe src="https://337a66d9c3661a4d7ca59783ba770655.ipfs.4everland.link/ipfs/bafkreiflvn4gws6xvbcr64qcgfqtgb5qcskdphwgmnhoce2kykxzm5ajmq" 
+            width="100%" 
+            height="180" 
+            frameborder="0" 
+            scrolling="no" 
+            style="background: black;">
+    </iframe>
+    
+    <div class="content-wrapper">
+        <h2 id="bodyTitle">All Bodies</h2>
+        <div class="search-container">
+            <select id="bodyFilter" onchange="filterMonkes()">
+                <option value="all">All Bodies</option>
+            </select>
+            <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
+            <button onclick="filterMonkes()">Search</button>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>NODEMONKE</th>
-                    <th>颜色</th>
-                    <th>特征</th>
-                    <th>排名</th>
-                    <th>铭文号</th>
-                    <th>区块高度</th>
+                    <th>COLOR</th>
+                    <th>TRAITS</th>
+                    <th>RANK</th>
+                    <th>INSCRIPTION #</th>
+                    <th>BLOCK HEIGHT</th>
                     <th>SCRIPT PUBKEY</th>
                 </tr>
             </thead>
@@ -215,11 +202,7 @@
                     <td>${monke.id}</td>
                     <td><img src="${IMAGE_URL}/${monke.id}.png" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy"></td>
                     <td>${createColorBar(monke.colors)}</td>
-                    <td>
-                        <div class="traits-list">
-                            ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
-                        </div>
-                    </td>
+                    <td>${monke.traits.map(t => t.value).join('<br>')}</td>
                     <td>${monke.rank || 'N/A'}</td>
                     <td>${monke.inscription}</td>
                     <td>${monke.block}</td>
@@ -275,9 +258,9 @@
                 filterMonkes();
                 
             } catch (error) {
-                console.error('加载数据失败:', error);
+                console.error('Failed to load data:', error);
                 document.getElementById('monkesList').innerHTML = 
-                    '<tr><td colspan="8" style="text-align: center; color: red;">加载数据失败，请确保服务器地址正确且文件存在</td></tr>';
+                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
             }
         }
 
