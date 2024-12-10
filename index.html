@@ -19,26 +19,13 @@
             top: 0;
             left: 0;
             right: 0;
-            overflow: hidden;
-            background: #000;
             z-index: 1000;
         }
-        .animation-viewport {
-            position: absolute;
-            height: 168px;
+        .header-frame iframe {
             width: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            overflow: hidden;
-        }
-        #animationCanvas {
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
             height: 100%;
+            border: none;
+            background: black;
         }
         .content-wrapper {
             max-width: 1400px;
@@ -108,7 +95,7 @@
         th { 
             background: #f8f8f8; 
             position: sticky;
-            top: 0;
+            top: 180px; /* 调整为header-frame的高度 */
             font-weight: 600;
             z-index: 1;
         }
@@ -173,9 +160,7 @@
 </head>
 <body>
     <div class="header-frame">
-        <div class="animation-viewport">
-            <canvas id="animationCanvas"></canvas>
-        </div>
+        <iframe src="/animation.html" scrolling="no"></iframe>
     </div>
     
     <div class="content-wrapper">
@@ -207,31 +192,6 @@
     </div>
 
     <script>
-        const PARAMS = {
-            frameCount: 36,
-            frameDelay: 16,
-            rotationRange: 0.08,
-            pressDownStrength: 30,
-            insertionStrength: 40,
-            insertionAngle: 0.06,
-            squashStrength: 0.15,
-            displayDuration: 5000,
-            baseSize: 28,
-            hdScale: 6,
-            transitionDuration: 500,
-            nodDuration: 800,
-            exitDuration: 7500,
-            entranceDuration: 7500,
-            movementRange: 2.0,
-        };
-
-        // Initialize animation canvas
-        const canvas = document.getElementById('animationCanvas');
-        const ctx = canvas.getContext('2d');
-        const container = document.querySelector('.animation-viewport');
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-
         const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
         const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
@@ -342,11 +302,6 @@
                 e.target.classList.add('error');
             }
         }, true);
-
-        window.addEventListener('resize', () => {
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-        });
     </script>
 </body>
 </html>
