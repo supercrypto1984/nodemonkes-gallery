@@ -15,12 +15,12 @@
         .header-group {
             background: #2D2D2D;
             border-radius: 8px;
-            padding: 12px; /* Updated padding */
-            margin-bottom: 1px; /* Updated margin */
+            padding: 12px; 
+            margin-bottom: 0; 
         }
         h2 { 
             font-size: 36px; 
-            margin: 0 0 10px 0; /* Updated margin */
+            margin: 0 0 10px 0; 
             color: #FFFFFF;
         }
         .search-container {
@@ -56,8 +56,8 @@
         .table-container {
             background: #2D2D2D;
             border-radius: 8px;
-            padding: 0; /* Updated padding */
-            max-height: calc(100vh - 180px); /* Updated max-height */
+            padding: 0; 
+            max-height: calc(100vh - 180px); 
             overflow: auto;
             position: relative;
         }
@@ -176,7 +176,6 @@
     </div>
 
     <script>
-        // JavaScript code remains unchanged
         const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
         const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
@@ -187,11 +186,6 @@
         let db;
         let isBackgroundLoading = false;
         let lastLoadedIndex = 0;
-
-        // All the existing JavaScript functions remain exactly the same
-        // Including initDB, cacheJSON, getCachedJSON, cacheImage, getCachedImage,
-        // loadImagesInBackground, formatScriptPubkey, createColorBar, createTableRow,
-        // handleSearchKeyUp, filterMonkes, initializePage, and event listeners
 
         const initDB = () => {
             return new Promise((resolve, reject) => {
