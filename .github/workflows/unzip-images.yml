@@ -4,10 +4,14 @@ on:
   push:
     paths:
       - 'images/*.zip'
+  # 添加手动触发选项
+  workflow_dispatch:
 
 jobs:
   unzip:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v2
     
