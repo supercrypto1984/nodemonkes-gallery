@@ -200,9 +200,12 @@
             const filtered = allMonkes.filter(monke => {
                 const matchesBody = selectedBody === 'all' || monke.body === selectedBody;
                 const matchesSearch = !searchTerm || 
-                    monke.id.toString() === searchTerm || 
-                    monke.inscription.toString() === searchTerm ||
-                    monke.traits.some(t => t.value.toLowerCase().includes(searchTerm));
+                    (searchTerm.match(/^\d+$/) ? 
+                        // If search term is a number, do exact match for ID
+                        monke.id === parseInt(searchTerm) 
+                        : 
+                        // Otherwise do partial match for traits
+                        monke.traits.some(t => t.value.toLowerCase().includes(searchTerm)));
                 return matchesBody && matchesSearch;
             });
             
