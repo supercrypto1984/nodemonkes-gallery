@@ -5,38 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NODEMONKES</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
+        body, html { 
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: black;
         }
-        .header-container {
+        .header-frame {
             width: 100%;
             height: 180px;
-            position: relative;
-            background: black;
-            margin-bottom: 40px;
-        }
-        .header-frame {
             position: absolute;
             top: 0;
             left: 0;
+            right: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        .animation-viewport {
+            position: absolute;
+            height: 168px;
             width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            overflow: hidden;
+        }
+        #animationCanvas {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
             height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
         .content-wrapper {
             max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 40px;
+            margin: 180px auto 0;
+            padding: 40px;
         }
         h2 { 
             font-size: 36px; 
             color: white;
-            margin: 10px 0 20px 0;
+            margin: 20px 0;
         }
         .search-container {
             background: white;
@@ -157,14 +168,9 @@
     </style>
 </head>
 <body>
-    <div class="header-container">
-        <div class="header-frame">
-            <iframe src="https://337a66d9c3661a4d7ca59783ba770655.ipfs.4everland.link/ipfs/bafkreiflvn4gws6xvbcr64qcgfqtgb5qcskdphwgmnhoce2kykxzm5ajmq" 
-                    width="100%" 
-                    height="100%" 
-                    frameborder="0" 
-                    scrolling="no">
-            </iframe>
+    <div class="header-frame">
+        <div class="animation-viewport">
+            <canvas id="animationCanvas"></canvas>
         </div>
     </div>
     
