@@ -367,6 +367,9 @@
             filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
     
             tbody.innerHTML = filtered.map(createTableRow).join('');
+
+            // Notify parent window that filtering is complete
+            window.parent.postMessage({ type: 'filterComplete' }, '*');
         }
 
         // Modified initializePage function
@@ -413,6 +416,13 @@
                 
                 document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
                 document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
+                
+                // Listen for messages from the parent window
+                window.addEventListener('message', (event) => {
+                    if (event.data.type === 'triggerFilter') {
+                        filterMonkes();
+                    }
+                });
                 
             } catch (error) {
                 console.error('Failed to load data:', error);
