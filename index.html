@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NODEMONKES</title>
+    <style>
+        /* Previous styles remain the same until table columns */
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px;
+            max-width: 1400px;
+            margin: 40px auto;
+        }
+        h1 { 
+            font-size: 48px; 
+            margin-bottom: 0; 
+        }
+        h2 { 
+            font-size: 36px; 
+            color: #666; 
+            margin-top: 10px; 
+        }
+        .search-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container select,
+        .search-container input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-container input {
+            width: 200px;
+        }
+        .search-container button {
+            padding: 8px 16px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-container button:hover {
+            background: #555;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            table-layout: fixed;
+            background: white;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left;
+            vertical-align: top;
+        }
+        th { 
+            background: #f5f5f5; 
+            position: sticky;
+            top: 0;
+        }
+        td {
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
+        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
+        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
+        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
+        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
+        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
+        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
+        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
+        
+        .color-bar { 
+            width: 20px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .color-segment {
+            width: 100%;
+            height: 10px;
+        }
+        .monke-image {
+            image-rendering: pixelated;
+            width: 112px;
+            height: 112px;
+            display: block;
+        }
+        .script-pubkey {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #000;
+        }
+        tr.hidden {
+            display: none;
+        }
+        .monke-image.error {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>NODEMONKES</h1>
+    <h2 id="bodyTitle">All Bodies</h2>
+    <div class="search-container">
+        <select id="bodyFilter" onchange="filterMonkes()">
+            <option value="all">All Bodies</option>
+        </select>
+        <input type="text" id="search" placeholder="搜索 ID 或铭文号..." onkeyup="filterMonkes()">
+        <button onclick="filterMonkes()">搜索</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>NODEMONKE</th>
+                <th>COLOR</th>
+                <th>TRAITS</th>
+                <th>RANK</th>
+                <th>INSCRIPTION #</th>
+                <th>BLOCK HEIGHT</th>
+                <th>SCRIPT PUBKEY</th>
+            </tr>
+        </thead>
+        <tbody id="monkesList"></tbody>
+    </table>
+
+    <script>
+        const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
+        const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
+        const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
+
+        let allMonkes = [];
+        
+        function formatScriptPubkey(pubkey) {
+            const parts = pubkey.split(' ');
+            if (parts.length < 4) return pubkey;
+            
+            // Split into separate lines for OP_PUSHNUM_1 and OP_PUSHBYTES_32
+            const op1 = parts[0];
+            const op2 = parts[1] + ' ' + parts[2];
+            const hash = parts[3];
+            
+            // Split hash into chunks of approximately 32 characters
+            const chunkSize = 32;
+            const hashChunks = [];
+            for (let i = 0; i < hash.length; i += chunkSize) {
+                hashChunks.push(hash.slice(i, i + chunkSize));
+            }
+            
+            return `${op1}\n${op2}\n${hashChunks.join('\n')}`;
+        }
+
+        function createColorBar(colors) {
+            return `<div class="color-bar">
+                ${colors.map(({r, g, b}) => 
+                    `<div class="color-segment" style="background-color: rgb(${r},${g},${b})"></div>`
+                ).join('')}
+            </div>`;
+        }
+
+        function createTableRow(monke) {
+            return `
+                <tr>
+                    <td>${monke.id}</td>
+                    <td><img src="${IMAGE_URL}/${monke.id}.png" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy"></td>
+                    <td>${createColorBar(monke.colors)}</td>
+                    <td>${monke.traits.map(t => t.value).join('<br>')}</td>
+                    <td>${monke.rank || 'N/A'}</td>
+                    <td>${monke.inscription}</td>
+                    <td>${monke.block}</td>
+                    <td class="script-pubkey">${formatScriptPubkey(monke.scriptPubkey)}</td>
+                </tr>
+            `;
+        }
+
+        function filterMonkes() {
+            const searchTerm = document.getElementById('search').value.trim().toLowerCase();
+            const selectedBody = document.getElementById('bodyFilter').value;
+            const tbody = document.getElementById('monkesList');
+            const bodyTitle = document.getElementById('bodyTitle');
+            
+            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+            
+            const filtered = allMonkes.filter(monke => {
+                const matchesBody = selectedBody === 'all' || monke.body === selectedBody;
+                const matchesSearch = !searchTerm || 
+                    monke.id.toString().toLowerCase().includes(searchTerm) || 
+                    monke.inscription.toString().toLowerCase().includes(searchTerm) ||
+                    monke.traits.some(t => t.value.toLowerCase().includes(searchTerm));
+                return matchesBody && matchesSearch;
+            });
+            
+            filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
+            
+            tbody.innerHTML = filtered.map(createTableRow).join('');
+        }
+
+        async function initializePage() {
+            try {
+                const response = await fetch(JSON_URL);
+                if (!response.ok) throw new Error('Failed to load data');
+                
+                const data = await response.json();
+                allMonkes = data.nodemonkes;
+                
+                const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
+                const bodyFilter = document.getElementById('bodyFilter');
+                
+                bodyTypes.forEach(body => {
+                    const option = document.createElement('option');
+                    option.value = body;
+                    option.textContent = body;
+                    bodyFilter.appendChild(option);
+                });
+                
+                filterMonkes();
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                document.getElementById('monkesList').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: red;">加载数据失败，请确保服务器地址正确且文件存在</td></tr>';
+            }
+        }
+
+        initializePage();
+
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.classList.add('error');
+            }
+        }, true);
+    </script>
+</body>
+</html>
+
