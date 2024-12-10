@@ -11,34 +11,20 @@
             background-color: #1E1E1E;
             color: #FFFFFF;
             font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 20px);
-            overflow: hidden;
-        }
-        .content-wrapper {
-            display: flex;
-            flex-direction: column;
-            background: #2D2D2D;
-            border-radius: 8px;
-            height: 100%;
-            overflow: hidden;
-        }
-        .header-group {
-            background: #2D2D2D;
-            padding: 20px;
-            flex-shrink: 0;
-            border-bottom: 1px solid #3D3D3D;
         }
         h2 { 
             font-size: 36px; 
-            margin: 0 0 20px 0; 
+            margin: 20px 0;
             color: #FFFFFF;
         }
         .search-container {
+            background: #2D2D2D;
+            border-radius: 8px;
+            padding: 20px;
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 20px;
         }
         .search-container select,
         .search-container input {
@@ -49,12 +35,8 @@
             color: #FFFFFF;
             background-color: #3D3D3D;
         }
-        .search-container select {
-            min-width: 150px;
-        }
         .search-container input {
             width: 200px;
-            flex-grow: 1;
         }
         .search-container button {
             padding: 12px 24px;
@@ -70,9 +52,12 @@
             background: #5D5D5D;
         }
         .table-container {
-            flex: 1;
-            overflow: auto;
-            position: relative;
+            background: #2D2D2D;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: calc(100vh - 200px); /* Adjust this value as needed */
+            overflow-y: auto;
         }
         table { 
             width: 100%; 
@@ -86,31 +71,26 @@
             vertical-align: top;
             background: #2D2D2D;
             color: #FFFFFF;
-            height: 112px;
-        }
-        thead { 
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background: #2D2D2D;
         }
         th { 
             background: #3D3D3D; 
+            position: sticky;
+            top: 0;
+            z-index: 10;
             font-weight: 600;
-            height: auto;
         }
         td {
             overflow: hidden;
             word-wrap: break-word;
         }
-        th:nth-child(1), td:nth-child(1) { width: 60px; }
-        th:nth-child(2), td:nth-child(2) { width: 120px; }
-        th:nth-child(3), td:nth-child(3) { width: 60px; }
-        th:nth-child(4), td:nth-child(4) { width: 150px; }
-        th:nth-child(5), td:nth-child(5) { width: 80px; }
-        th:nth-child(6), td:nth-child(6) { width: 120px; }
-        th:nth-child(7), td:nth-child(7) { width: 100px; }
-        th:nth-child(8), td:nth-child(8) { width: 300px; }
+        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
+        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
+        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
+        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
+        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
+        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
+        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
+        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
         
         .color-bar { 
             width: 20px;
@@ -156,76 +136,42 @@
         .monke-image.error {
             display: none;
         }
-        .loading-placeholder {
-            width: 112px;
-            height: 112px;
-            background: #3D3D3D;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 12px;
-        }
     </style>
 </head>
 <body>
-    <div class="content-wrapper">
-        <div class="header-group">
-            <h2 id="bodyTitle">All Bodies</h2>
-            <div class="search-container">
-                <select id="bodyFilter">
-                    <option value="all">All Bodies</option>
-                </select>
-                <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
-                <button onclick="filterMonkes()">Search</button>
-            </div>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>NODEMONKE</th>
-                        <th>COLOR</th>
-                        <th>TRAITS</th>
-                        <th>RANK</th>
-                        <th>INSCRIPTION #</th>
-                        <th>BLOCK HEIGHT</th>
-                        <th>SCRIPT PUBKEY</th>
-                    </tr>
-                </thead>
-                <tbody id="monkesList"></tbody>
-            </table>
-        </div>
+    <h2 id="bodyTitle">All Bodies</h2>
+    <div class="search-container">
+        <select id="bodyFilter" onchange="filterMonkes()">
+            <option value="all">All Bodies</option>
+        </select>
+        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
+        <button onclick="filterMonkes()">Search</button>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>NODEMONKE</th>
+                    <th>COLOR</th>
+                    <th>TRAITS</th>
+                    <th>RANK</th>
+                    <th>INSCRIPTION #</th>
+                    <th>BLOCK HEIGHT</th>
+                    <th>SCRIPT PUBKEY</th>
+                </tr>
+            </thead>
+            <tbody id="monkesList"></tbody>
+        </table>
     </div>
 
     <script>
         const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
         const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
-        
+
         let allMonkes = [];
-        let imageCache = new Map();
-
-        async function preloadImage(id) {
-            if (imageCache.has(id)) {
-                return imageCache.get(id);
-            }
-
-            try {
-                const response = await fetch(`${IMAGE_URL}/${id}.png`);
-                if (!response.ok) throw new Error('Image not found');
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                imageCache.set(id, url);
-                return url;
-            } catch (error) {
-                console.error(`Failed to load image ${id}:`, error);
-                return null;
-            }
-        }
-
+        
         function formatScriptPubkey(pubkey) {
             const parts = pubkey.split(' ');
             if (parts.length < 4) return pubkey;
@@ -240,7 +186,10 @@
                 hashChunks.push(hash.slice(i, i + chunkSize));
             }
             
-            return `${op1}\n${op2}\n${hashChunks.join('\n')}`;
+            return `${op1}
+${op2}
+${hashChunks.join('
+')}`;
         }
 
         function createColorBar(colors) {
@@ -251,16 +200,11 @@
             </div>`;
         }
 
-        async function createTableRow(monke) {
-            const imageUrl = await preloadImage(monke.id);
-            const imageHtml = imageUrl 
-                ? `<img src="${imageUrl}" class="monke-image" alt="Nodemonke ${monke.id}" onerror="this.classList.add('error')">`
-                : `<div class="loading-placeholder">Loading...</div>`;
-
+        function createTableRow(monke) {
             return `
                 <tr>
                     <td>${monke.id}</td>
-                    <td>${imageHtml}</td>
+                    <td><img src="${IMAGE_URL}/${monke.id}.png" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy"></td>
                     <td>${createColorBar(monke.colors)}</td>
                     <td>
                         <div class="traits-list">
@@ -275,39 +219,30 @@
             `;
         }
 
-        function handleSearchKeyUp(event) {
-            if (event.key === 'Enter') {
-                filterMonkes();
-            }
-        }
-
-        async function filterMonkes() {
+        function filterMonkes() {
             const searchTerm = document.getElementById('search').value.trim();
             const selectedBody = document.getElementById('bodyFilter').value;
             const tbody = document.getElementById('monkesList');
             const bodyTitle = document.getElementById('bodyTitle');
-
+    
             bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
-
+    
             let filtered = allMonkes;
-
+    
             if (searchTerm) {
                 const searchNumber = parseInt(searchTerm);
                 filtered = allMonkes.filter(monke => 
                     monke.id === searchNumber || monke.inscription === searchNumber
                 );
             }
-
+    
             if (selectedBody !== 'all') {
                 filtered = filtered.filter(monke => monke.body === selectedBody);
             }
-
+    
             filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
-
-            const rows = await Promise.all(filtered.map(createTableRow));
-            tbody.innerHTML = rows.join('');
-
-            window.parent.postMessage({ type: 'filterComplete' }, '*');
+    
+            tbody.innerHTML = filtered.map(createTableRow).join('');
         }
 
         async function initializePage() {
@@ -328,7 +263,7 @@
                     bodyFilter.appendChild(option);
                 });
                 
-                await filterMonkes();
+                filterMonkes();
                 
             } catch (error) {
                 console.error('Failed to load data:', error);
@@ -337,11 +272,13 @@
             }
         }
 
-        window.addEventListener('beforeunload', () => {
-            imageCache.forEach(url => URL.revokeObjectURL(url));
-        });
-
         initializePage();
+
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.classList.add('error');
+            }
+        }, true);
     </script>
 </body>
 </html>
