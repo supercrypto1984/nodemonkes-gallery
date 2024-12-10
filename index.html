@@ -238,24 +238,24 @@
             const selectedBody = document.getElementById('bodyFilter').value;
             const tbody = document.getElementById('monkesList');
             const bodyTitle = document.getElementById('bodyTitle');
-            
-            bodyTitle.textContent = selectedBody === 'all' ? '全部类型' : selectedBody;
-            
+    
+            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+    
             let filtered = allMonkes;
-            
+    
             if (searchTerm) {
                 const searchNumber = parseInt(searchTerm);
                 filtered = allMonkes.filter(monke => 
                     monke.id === searchNumber || monke.inscription === searchNumber
                 );
             }
-            
+    
             if (selectedBody !== 'all') {
                 filtered = filtered.filter(monke => monke.body === selectedBody);
             }
-            
+    
             filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
-            
+    
             tbody.innerHTML = filtered.map(createTableRow).join('');
         }
 
