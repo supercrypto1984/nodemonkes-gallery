@@ -142,7 +142,7 @@
         <select id="bodyFilter">
             <option value="all">All Bodies</option>
         </select>
-        <input type="text" id="search" placeholder="Search ID or Inscription...">
+        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
         <button onclick="filterMonkes()">Search</button>
     </div>
     <div class="table-container">
@@ -336,6 +336,12 @@
             `;
         }
 
+        function handleSearchKeyUp(event) {
+            if (event.key === 'Enter') {
+                filterMonkes();
+            }
+        }
+
         // Modified filterMonkes function
         function filterMonkes() {
             const searchTerm = document.getElementById('search').value.trim();
@@ -404,6 +410,9 @@
                 } else {
                     setTimeout(loadImagesInBackground, 0);
                 }
+                
+                document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
+                document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
                 
             } catch (error) {
                 console.error('Failed to load data:', error);
