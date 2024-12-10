@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <title>Animated Inscription</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .image-container {
+            width: 100%;
+            height: 180px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .animation-viewport {
+            position: absolute;
+            height: 168px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            overflow: hidden;
+        }
+
+        #animationCanvas {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="image-container">
+        <div class="animation-viewport">
+            <canvas id="animationCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+    const PARAMS = {
+        frameCount: 36,
+        frameDelay: 16,
+        rotationRange: 0.08,
+        pressDownStrength: 30,
+        insertionStrength: 40,
+        insertionAngle: 0.06,
+        squashStrength: 0.15,
+        displayDuration: 5000,
+        baseSize: 28,
+        hdScale: 6,
+        transitionDuration: 500,
+        nodDuration: 800,
+        exitDuration: 7500,
+        entranceDuration: 7500,
+        movementRange: 2.0,
+    };
+
+    const imageQueue = [];
+    const MAX_QUEUE_SIZE = 3;
+
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d', {
+        willReadFrequently: true,
+        alpha: true
+    });
+
+    const AnimationState = {
+        DISPLAY: 'display',
+        NOD: 'nod',
+        EXIT: 'exit',
+        ENTRANCE: 'entrance'
+    };
+
+    let currentState = AnimationState.ENTRANCE;
+    let stateStartTime = 0;
+    let currentImage = null;
+    let nextImage = null;
+    let isTransitioning = false;
+
+    // 鍏朵粬杈呭姪鍑芥暟淇濇寔涓嶅彉...
+    function createImageSlices(image, scale) {
+        const width = image.width;
+        const height = image.height;
+        const splitLine = Math.floor(23 * scale);
+
+        const upperCanvas = document.createElement('canvas');
+        upperCanvas.width = width;
+        upperCanvas.height = splitLine;
+        const upperCtx = upperCanvas.getContext('2d', {alpha: true});
+        upperCtx.imageSmoothingEnabled = false;
+
+        const lowerCanvas = document.createElement('canvas');
+        lowerCanvas.width = width;
+        lowerCanvas.height = height - splitLine;
+        const lowerCtx = lowerCanvas.getContext('2d', {alpha: true});
+        lowerCtx.imageSmoothingEnabled = false;
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext('2d', {alpha: true});
+        tempCtx.imageSmoothingEnabled = false;
+        tempCtx.clearRect(0, 0, width, height);
+        tempCtx.drawImage(image, 0, 0);
+        
+        const imageData = tempCtx.getImageData(0, 0, width, height);
+        const upperImageData = new ImageData(width, splitLine);
+        const lowerImageData = new ImageData(width, height - splitLine);
+
+        for (let y = 0; y < splitLine; y++) {
+            for (let x = 0; x < width; x++) {
+                const sourceIndex = (y * width + x) * 4;
+                const targetIndex = (y * width + x) * 4;
+                upperImageData.data.set(
+                    imageData.data.slice(sourceIndex, sourceIndex + 4),
+                    targetIndex
+                );
+            }
+        }
+
+        for (let y = 0; y < height - splitLine; y++) {
+            for (let x = 0; x < width; x++) {
+                const sourceIndex = ((y + splitLine) * width + x) * 4;
+                const targetIndex = (y * width + x) * 4;
+                lowerImageData.data.set(
+                    imageData.data.slice(sourceIndex, sourceIndex + 4),
+                    targetIndex
+                );
+            }
+        }
+
+        upperCtx.putImageData(upperImageData, 0, 0);
+        lowerCtx.putImageData(lowerImageData, 0, 0);
+
+        return {
+            upper: upperCanvas,
+            lower: lowerCanvas,
+            splitLine: splitLine
+        };
+    }
+
+    function drawFrame(ctx, slices, frameIndex, size, options = {}) {
+        const { 
+            opacity = 1,
+            xOffset = 0,
+            yOffset = 0,
+            rotation = 0,
+            nodRotation = 0,
+            clearCanvas = false
+        } = options;
+
+        const { width, height, scale } = size;
+        const { upper, lower, splitLine } = slices;
+        
+        if (clearCanvas) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
+        
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        offscreenCtx.clearRect(0, 0, width, height);
+        
+        const progress = frameIndex / PARAMS.frameCount * Math.PI * 2;
+        const baseRotation = Math.sin(progress) * PARAMS.rotationRange;
+        const pressDownPhase = Math.max(0, Math.sin(progress));
+
+        const pressDownOffset = Math.round(pressDownPhase * (PARAMS.pressDownStrength * scale / 28));
+        const insertionOffset = Math.round(pressDownPhase * (PARAMS.insertionStrength * scale / 28));
+        const insertionRotation = pressDownPhase * PARAMS.insertionAngle;
+        const compressionFactor = pressDownPhase * PARAMS.squashStrength;
+
+        offscreenCtx.globalAlpha = opacity;
+
+        offscreenCtx.save();
+        offscreenCtx.translate(width/2, height/2);
+        offscreenCtx.rotate(rotation);
+        offscreenCtx.translate(-width/2, -height/2);
+
+        // 缁樺埗涓嬪崐韬�
+        offscreenCtx.save();
+        offscreenCtx.translate(width/2, height);
+        offscreenCtx.scale(1 + (compressionFactor * 0.2), 1 - compressionFactor);
+        offscreenCtx.translate(-width/2, -height);
+        offscreenCtx.drawImage(lower, 0, splitLine);
+        offscreenCtx.restore();
+
+        // 缁樺埗涓婂崐韬�
+        offscreenCtx.save();
+        const pivotX = Math.round(width * 3/7);
+        const pivotY = splitLine;
+        offscreenCtx.translate(pivotX, pivotY);
+        offscreenCtx.rotate(baseRotation + nodRotation);
+        offscreenCtx.translate(-pivotX, -pivotY);
+
+        if (pressDownPhase > 0) {
+            offscreenCtx.translate(0, pressDownOffset);
+            offscreenCtx.translate(pivotX, pivotY);
+            offscreenCtx.rotate(insertionRotation);
+            offscreenCtx.translate(-pivotX, -pivotY);
+        }
+
+        offscreenCtx.drawImage(upper, 0, 0);
+        offscreenCtx.restore();
+        offscreenCtx.restore();
+
+        // 鍙湪闇€瑕佹椂娓呴櫎鐗瑰畾鍖哄煙
+        if (!clearCanvas) {
+            const clearX = Math.max(0, xOffset - 5);
+            const clearWidth = width + 10;
+            ctx.clearRect(clearX, 0, clearWidth, ctx.canvas.height);
+        }
+
+        ctx.drawImage(offscreenCanvas, xOffset, (ctx.canvas.height - height) / 2);
+    }
+
+    async function animate() {
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d', { 
+            willReadFrequently: true,
+            alpha: true
+        });
+        ctx.imageSmoothingEnabled = false;
+
+        const container = document.querySelector('.animation-viewport');
+        const size = calculateOptimalSize(container.clientHeight);
+        
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+
+        let frame = 0;
+        let startTime = Date.now();
+        
+        async function animateFrame() {
+            const currentTime = Date.now();
+            const elapsedTime = currentTime - startTime;
+            const stateTime = currentTime - stateStartTime;
+
+            if (!currentImage) {
+                await preloadImages();
+                currentImage = getNextImageFromQueue();
+                if (!currentImage) {
+                    requestAnimationFrame(animateFrame);
+                    return;
+                }
+                startTime = currentTime;
+                stateStartTime = currentTime;
+                currentState = AnimationState.ENTRANCE;
+            }
+
+            const containerWidth = container.clientWidth;
+            const movementWidth = containerWidth - size.width;
+
+            switch (currentState) {
+                case AnimationState.DISPLAY:
+                    drawFrame(ctx, currentImage, frame, size, { clearCanvas: true });
+                    
+                    if (stateTime >= PARAMS.displayDuration) {
+                        currentState = AnimationState.NOD;
+                        stateStartTime = currentTime;
+                    }
+                    break;
+
+                case AnimationState.NOD:
+                    const nodProgress = (currentTime - stateStartTime) / PARAMS.nodDuration;
+                    drawFrame(ctx, currentImage, frame, size, {
+                        nodRotation: Math.sin(nodProgress * Math.PI * 2) * 0.15,
+                        clearCanvas: true
+                    });
+                    
+                    if (nodProgress >= 1) {
+                        currentState = AnimationState.EXIT;
+                        stateStartTime = currentTime;
+                        if (!nextImage) {
+                            nextImage = getNextImageFromQueue();
+                        }
+                        isTransitioning = true;
+                    }
+                    break;
+
+                case AnimationState.EXIT:
+                    const exitProgress = (currentTime - stateStartTime) / PARAMS.exitDuration;
+                    const currentImageX = Math.min(containerWidth, exitProgress * movementWidth * 2);
+                    
+                    // 娓呴櫎鏁翠釜鐢诲竷
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 缁樺埗褰撳墠鍥惧儚
+                    drawFrame(ctx, currentImage, frame, size, {
+                        xOffset: currentImageX,
+                        clearCanvas: false
+                    });
+
+                    // 鍙湁褰撳綋鍓嶅浘鍍忕Щ鍔ㄥ埌涓€瀹氫綅缃悗鎵嶅紑濮嬬粯鍒朵笅涓€涓浘鍍�
+                    if (nextImage && currentImageX > containerWidth * 0.75) {
+                        const nextImageStartX = -size.width;
+                        const nextImageEndX = 0;
+                        const nextImageProgress = (currentImageX - containerWidth * 0.75) / (containerWidth * 0.25);
+                        const nextImageX = nextImageStartX + (nextImageEndX - nextImageStartX) * nextImageProgress;
+                        
+                        drawFrame(ctx, nextImage, frame, size, {
+                            xOffset: nextImageX,
+                            clearCanvas: false
+                        });
+                    }
+                    
+                    if (exitProgress >= 1) {
+                        currentImage = nextImage;
+                        nextImage = null;
+                        currentState = AnimationState.DISPLAY;
+                        stateStartTime = currentTime;
+                        isTransitioning = false;
+                    }
+                    break;
+
+                case AnimationState.ENTRANCE:
+                    const entranceProgress = (currentTime - stateStartTime) / PARAMS.entranceDuration;
+                    const entranceX = (1 - entranceProgress) * -size.width;
+                    
+                    drawFrame(ctx, currentImage, frame, size, {
+                        xOffset: entranceX,
+                        clearCanvas: true
+                    });
+                    
+                    if (entranceProgress >= 1) {
+                        currentState = AnimationState.DISPLAY;
+                        stateStartTime = currentTime;
+                        startTime = currentTime;
+                    }
+                    break;
+            }
+
+            frame = (frame + 1) % PARAMS.frameCount;
+            requestAnimationFrame(animateFrame);
+        }
+
+        animateFrame();
+    }
+
+    // 鍏朵粬杈呭姪鍑芥暟淇濇寔涓嶅彉...
+    async function createHDImage(originalImage, targetSize) {
+        const hdCanvas = document.createElement('canvas');
+        const hdCtx = hdCanvas.getContext('2d', { 
+            willReadFrequently: true,
+            alpha: true
+        });
+        
+        hdCanvas.width = targetSize.width;
+        hdCanvas.height = targetSize.height;
+        
+        hdCtx.imageSmoothingEnabled = false;
+        hdCtx.clearRect(0, 0, hdCanvas.width, hdCanvas.height);
+        hdCtx.drawImage(originalImage, 
+            0, 0, PARAMS.baseSize, PARAMS.baseSize,
+            0, 0, targetSize.width, targetSize.height
+        );
+        
+        const hdImage = new Image();
+        hdImage.src = hdCanvas.toDataURL('image/png');
+        
+        return new Promise((resolve) => {
+            hdImage.onload = () => resolve(hdImage);
+        });
+    }
+
+    function calculateOptimalSize(containerHeight) {
+        const scale = Math.floor(containerHeight / PARAMS.baseSize);
+        return {
+            width: PARAMS.baseSize * scale,
+            height: PARAMS.baseSize * scale,
+            scale: scale
+        };
+    }
+
+    async function loadNextImage() {
+        const index = Math.floor(Math.random() * 10000);
+        const baseId = '0000077c4851b026f4d19c25bf80de7b5b44b856da50d67ae8da304bd3be6999i';
+        const imageUrl = `https://ordinals.com/content/${baseId}${index}`;
+        try {
+            const originalImg = await loadImage(imageUrl);
+            const size = calculateOptimalSize(
+                document.querySelector('.animation-viewport').clientHeight
+            );
+            const hdImage = await createHDImage(originalImg, size);
+            return createImageSlices(hdImage, size.scale);
+        } catch (error) {
+            console.error('Failed to load image:', error);
+            return null;
+        }
+    }
+
+    async function preloadImages() {
+        while (imageQueue.length < MAX_QUEUE_SIZE) {
+            const image = await loadNextImage();
+            if (image) {
+                imageQueue.push(image);
+            }
+        }
+    }
+
+    function getNextImageFromQueue() {
+        if (imageQueue.length > 0) {
+            const image = imageQueue.shift();
+            preloadImages();
+            return image;
+        }
+        return null;
+    }
+
+    function loadImage(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+            img.src = url;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        animate();
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('animationCanvas');
+            const container = document.querySelector('.animation-viewport');
+            const size = calculateOptimalSize(container.clientHeight);
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        });
+    });
+    </script>
+</body>
+</html>
