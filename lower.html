@@ -86,7 +86,7 @@
             word-wrap: break-word;
         }
         th:nth-child(1), td:nth-child(1) { width: 50px; } /* # */
-        th:nth-child(2), td:nth-child(2) { width: 100px; } /* NODEMONKE */
+        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
         th:nth-child(3), td:nth-child(3) { width: 50px; } /* COLOR */
         th:nth-child(4), td:nth-child(4) { width: 120px; } /* TRAITS */
         th:nth-child(5), td:nth-child(5) { width: 60px; } /* RANK */
@@ -108,10 +108,11 @@
         }
         .monke-image {
             image-rendering: pixelated;
-            width: 90px;
-            height: 90px;
+            width: 112px;  /* 28px * 4 for high-res */
+            height: 112px; /* maintain square aspect ratio */
             display: block;
             border-radius: 4px;
+            background-color: rgb(151, 123, 182); /* add purple background */
         }
         .script-pubkey {
             font-family: Arial, sans-serif;
@@ -502,3 +503,4 @@
     </script>
 </body>
 </html>
+
