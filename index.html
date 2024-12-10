@@ -3,44 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NODEMONKES</title>
+    <title>NODEMONKES Browser</title>
     <style>
-        body, html { 
+        body { 
             margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-        }
-        .header-frame {
-            width: 100%;
-            height: 180px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
-        .header-frame iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: black;
-        }
-        .content-wrapper {
-            max-width: 1400px;
-            margin: 180px auto 0;
-            padding: 40px;
-            position: relative;
-            z-index: 1;
+            padding: 20px;
+            background-color: #1E1E1E;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
         }
         h2 { 
             font-size: 36px; 
-            color: white;
             margin: 20px 0;
+            color: #FFFFFF;
         }
         .search-container {
-            background: white;
+            background: #2D2D2D;
             border-radius: 8px;
             padding: 20px;
             display: flex;
@@ -51,17 +29,18 @@
         .search-container select,
         .search-container input {
             padding: 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #3D3D3D;
             border-radius: 6px;
             font-size: 14px;
-            color: #333;
+            color: #FFFFFF;
+            background-color: #3D3D3D;
         }
         .search-container input {
             width: 200px;
         }
         .search-container button {
             padding: 12px 24px;
-            background: #333;
+            background: #4D4D4D;
             color: white;
             border: none;
             border-radius: 6px;
@@ -70,10 +49,10 @@
             transition: background-color 0.2s;
         }
         .search-container button:hover {
-            background: #555;
+            background: #5D5D5D;
         }
         .table-container {
-            background: white;
+            background: #2D2D2D;
             border-radius: 8px;
             padding: 20px;
             overflow-x: auto;
@@ -81,21 +60,20 @@
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            background: white;
             table-layout: fixed;
         }
         th, td { 
-            border: 1px solid #eee; 
+            border: 1px solid #3D3D3D; 
             padding: 12px; 
             text-align: left;
             vertical-align: top;
-            background: white;
-            color: #333;
+            background: #2D2D2D;
+            color: #FFFFFF;
         }
         th { 
-            background: #f8f8f8; 
+            background: #3D3D3D; 
             position: sticky;
-            top: 180px; /* 调整为header-frame的高度 */
+            top: 0;
             font-weight: 600;
             z-index: 1;
         }
@@ -137,7 +115,7 @@
             line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-all;
-            background: #f8f8f8;
+            background: #3D3D3D;
             padding: 8px;
             border-radius: 4px;
         }
@@ -147,11 +125,11 @@
             gap: 4px;
         }
         .trait-tag {
-            background: #f0f0f0;
+            background: #3D3D3D;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
-            color: #666;
+            color: #FFFFFF;
         }
         .monke-image.error {
             display: none;
@@ -159,36 +137,30 @@
     </style>
 </head>
 <body>
-    <div class="header-frame">
-        <iframe src="/animation.html" scrolling="no"></iframe>
+    <h2 id="bodyTitle">All Bodies</h2>
+    <div class="search-container">
+        <select id="bodyFilter" onchange="filterMonkes()">
+            <option value="all">All Bodies</option>
+        </select>
+        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
+        <button onclick="filterMonkes()">Search</button>
     </div>
-    
-    <div class="content-wrapper">
-        <h2 id="bodyTitle">All Bodies</h2>
-        <div class="search-container">
-            <select id="bodyFilter" onchange="filterMonkes()">
-                <option value="all">All Bodies</option>
-            </select>
-            <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
-            <button onclick="filterMonkes()">Search</button>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>NODEMONKE</th>
-                        <th>COLOR</th>
-                        <th>TRAITS</th>
-                        <th>RANK</th>
-                        <th>INSCRIPTION #</th>
-                        <th>BLOCK HEIGHT</th>
-                        <th>SCRIPT PUBKEY</th>
-                    </tr>
-                </thead>
-                <tbody id="monkesList"></tbody>
-            </table>
-        </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>NODEMONKE</th>
+                    <th>COLOR</th>
+                    <th>TRAITS</th>
+                    <th>RANK</th>
+                    <th>INSCRIPTION #</th>
+                    <th>BLOCK HEIGHT</th>
+                    <th>SCRIPT PUBKEY</th>
+                </tr>
+            </thead>
+            <tbody id="monkesList"></tbody>
+        </table>
     </div>
 
     <script>
