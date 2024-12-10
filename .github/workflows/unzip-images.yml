@@ -1,0 +1,28 @@
+name: Unzip Images
+
+on:
+  push:
+    paths:
+      - 'images/*.zip'
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Unzip files
+      run: |
+        for zip in images/*.zip
+        do
+          unzip -o "$zip" -d images/
+          rm "$zip"
+        done
+    
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add images/
+        git commit -m "Unzip images" || echo "No changes to commit"
+        git push
