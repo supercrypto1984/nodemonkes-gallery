@@ -136,6 +136,15 @@
         .monke-image.error {
             display: none;
         }
+        table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            background: #3D3D3D;
+        }
     </style>
 </head>
 <body>
@@ -171,7 +180,113 @@
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
 
         let allMonkes = [];
-        
+        let db;
+
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('nodemonkesDB', 1);
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event);
+                    reject(event);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    db.createObjectStore('nodemonkes', { keyPath: 'id' });
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve();
+                };
+            });
+        }
+
+        async function cacheJSON(data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['nodemonkes'], 'readwrite');
+                const store = transaction.objectStore('nodemonkes');
+                const timestamp = Date.now();
+                const dataToStore = { timestamp, data };
+
+                const request = store.put(dataToStore);
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => {
+                    console.error('Error caching JSON:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        async function getCachedJSON() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['nodemonkes'], 'readonly');
+                const store = transaction.objectStore('nodemonkes');
+                const request = store.get(1); // Assuming only one entry for all data
+
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    resolve(result);
+                };
+                request.onerror = (event) => {
+                    console.error('Error getting cached JSON:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        async function cacheImage(id, blob) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['images'], 'readwrite');
+                const store = transaction.objectStore('images');
+                const request = store.put(blob, id);
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => {
+                    console.error('Error caching image:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        async function getCachedImage(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+                const request = store.get(id);
+
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    resolve(result);
+                };
+                request.onerror = (event) => {
+                    console.error('Error getting cached image:', event);
+                    reject(event);
+                };
+            });
+        }
+
+        async function loadImagesInBackground() {
+            for (const monke of allMonkes) {
+                const cachedImg = await getCachedImage(monke.id);
+                if (cachedImg) {
+                    const img = document.querySelector(`img[src="${IMAGE_URL}/${monke.id}.png"]`);
+                    if (img) img.src = URL.createObjectURL(cachedImg);
+                } else {
+                    try {
+                        const response = await fetch(`${IMAGE_URL}/${monke.id}.png`);
+                        if (!response.ok) throw new Error(`Failed to load image ${monke.id}`);
+                        const blob = await response.blob();
+                        await cacheImage(monke.id, blob);
+                        const img = document.querySelector(`img[src="${IMAGE_URL}/${monke.id}.png"]`);
+                        if (img) img.src = URL.createObjectURL(blob);
+                    } catch (error) {
+                        console.error('Failed to load image:', error);
+                    }
+                }
+            }
+        }
+
         function formatScriptPubkey(pubkey) {
             const parts = pubkey.split(' ');
             if (parts.length < 4) return pubkey;
@@ -247,24 +362,42 @@ ${hashChunks.join('
 
         async function initializePage() {
             try {
-                const response = await fetch(JSON_URL);
-                if (!response.ok) throw new Error('Failed to load data');
-                
-                const data = await response.json();
-                allMonkes = data.nodemonkes;
-                
+                await initDB();
+        
+                const cachedData = await getCachedJSON();
+        
+                if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
+                    allMonkes = cachedData.data.nodemonkes;
+                } else {
+                    const response = await fetch(JSON_URL);
+                    if (!response.ok) throw new Error('Failed to load data');
+            
+                    const data = await response.json();
+                    allMonkes = data.nodemonkes;
+            
+                    await cacheJSON(data);
+                }
+        
                 const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
                 const bodyFilter = document.getElementById('bodyFilter');
-                
+        
                 bodyTypes.forEach(body => {
                     const option = document.createElement('option');
                     option.value = body;
                     option.textContent = body;
                     bodyFilter.appendChild(option);
                 });
-                
+        
                 filterMonkes();
-                
+        
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(() => {
+                        loadImagesInBackground();
+                    });
+                } else {
+                    setTimeout(loadImagesInBackground, 0);
+                }
+        
             } catch (error) {
                 console.error('Failed to load data:', error);
                 document.getElementById('monkesList').innerHTML = 
@@ -279,6 +412,13 @@ ${hashChunks.join('
                 e.target.classList.add('error');
             }
         }, true);
+
+        window.addEventListener('beforeunload', () => {
+            if (db) {
+                const urls = document.querySelectorAll('img[src^="blob:"]');
+                urls.forEach(img => URL.revokeObjectURL(img.src));
+            }
+        });
     </script>
 </body>
 </html>
