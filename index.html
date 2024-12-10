@@ -73,6 +73,30 @@
                 await loadFrame('header', 'upper.html');
                 await loadFrame('content', 'lower.html');
                 console.log('Frames loaded successfully');
+
+                // Set up message listener for the parent window
+                window.addEventListener('message', (event) => {
+                    if (event.source === document.getElementById('content').contentWindow) {
+                        if (event.data.type === 'filterComplete') {
+                            // Scroll the content iframe to the top
+                            document.getElementById('content').contentWindow.scrollTo(0, 0);
+                        }
+                    }
+                });
+
+                // Set up mutation observer to watch for changes in the content iframe
+                const contentFrame = document.getElementById('content');
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                            // When the src attribute changes (i.e., page reloads), re-trigger the filter
+                            contentFrame.contentWindow.postMessage({ type: 'triggerFilter' }, '*');
+                        }
+                    });
+                });
+
+                observer.observe(contentFrame, { attributes: true });
+
             } catch (error) {
                 console.error('Error loading frames:', error);
                 document.body.innerHTML = `<div class="loading">Loading failed, please refresh the page and try again</div>`;
