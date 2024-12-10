@@ -10,13 +10,23 @@
             margin: 0;
             padding: 0;
             background-color: black;
-            color: white;
         }
-        .header-frame {
+        .header-container {
             width: 100%;
             height: 180px;
+            position: relative;
             background: black;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .header-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .content-wrapper {
             max-width: 1400px;
@@ -26,16 +36,16 @@
         h2 { 
             font-size: 36px; 
             color: white;
-            margin: 20px 0;
+            margin: 10px 0 20px 0;
         }
         .search-container {
-            margin: 20px 0;
-            padding: 20px;
-            background: #f8f8f8;
+            background: white;
             border-radius: 8px;
+            padding: 20px;
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 20px;
         }
         .search-container select,
         .search-container input {
@@ -55,35 +65,41 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.2s;
         }
         .search-container button:hover {
             background: #555;
         }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-top: 20px;
+            background: white;
             table-layout: fixed;
-            background: #f8f8f8;
         }
         th, td { 
             border: 1px solid #eee; 
             padding: 12px; 
             text-align: left;
             vertical-align: top;
-            background: #f8f8f8;
+            background: white;
+            color: #333;
         }
         th { 
+            background: #f8f8f8; 
             position: sticky;
             top: 0;
             font-weight: 600;
-            color: #333;
             z-index: 1;
         }
         td {
             overflow: hidden;
             word-wrap: break-word;
-            color: #333;
         }
         th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
         th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
@@ -99,6 +115,8 @@
             height: 100px;
             display: flex;
             flex-direction: column;
+            border-radius: 4px;
+            overflow: hidden;
         }
         .color-segment {
             width: 100%;
@@ -109,6 +127,7 @@
             width: 112px;
             height: 112px;
             display: block;
+            border-radius: 4px;
         }
         .script-pubkey {
             font-family: monospace;
@@ -116,13 +135,21 @@
             line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-all;
-            color: #333;
             background: #f8f8f8;
             padding: 8px;
             border-radius: 4px;
         }
-        tr.hidden {
-            display: none;
+        .traits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .trait-tag {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
         }
         .monke-image.error {
             display: none;
@@ -130,13 +157,16 @@
     </style>
 </head>
 <body>
-    <iframe src="https://337a66d9c3661a4d7ca59783ba770655.ipfs.4everland.link/ipfs/bafkreiflvn4gws6xvbcr64qcgfqtgb5qcskdphwgmnhoce2kykxzm5ajmq" 
-            width="100%" 
-            height="180" 
-            frameborder="0" 
-            scrolling="no" 
-            style="background: black;">
-    </iframe>
+    <div class="header-container">
+        <div class="header-frame">
+            <iframe src="https://337a66d9c3661a4d7ca59783ba770655.ipfs.4everland.link/ipfs/bafkreiflvn4gws6xvbcr64qcgfqtgb5qcskdphwgmnhoce2kykxzm5ajmq" 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    scrolling="no">
+            </iframe>
+        </div>
+    </div>
     
     <div class="content-wrapper">
         <h2 id="bodyTitle">All Bodies</h2>
@@ -147,21 +177,23 @@
             <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
             <button onclick="filterMonkes()">Search</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>NODEMONKE</th>
-                    <th>COLOR</th>
-                    <th>TRAITS</th>
-                    <th>RANK</th>
-                    <th>INSCRIPTION #</th>
-                    <th>BLOCK HEIGHT</th>
-                    <th>SCRIPT PUBKEY</th>
-                </tr>
-            </thead>
-            <tbody id="monkesList"></tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>NODEMONKE</th>
+                        <th>COLOR</th>
+                        <th>TRAITS</th>
+                        <th>RANK</th>
+                        <th>INSCRIPTION #</th>
+                        <th>BLOCK HEIGHT</th>
+                        <th>SCRIPT PUBKEY</th>
+                    </tr>
+                </thead>
+                <tbody id="monkesList"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -202,7 +234,11 @@
                     <td>${monke.id}</td>
                     <td><img src="${IMAGE_URL}/${monke.id}.png" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy"></td>
                     <td>${createColorBar(monke.colors)}</td>
-                    <td>${monke.traits.map(t => t.value).join('<br>')}</td>
+                    <td>
+                        <div class="traits-list">
+                            ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
+                        </div>
+                    </td>
                     <td>${monke.rank || 'N/A'}</td>
                     <td>${monke.inscription}</td>
                     <td>${monke.block}</td>
