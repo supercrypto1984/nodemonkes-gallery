@@ -1,157 +1,89 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Animated Inscription</title>
+    <meta charset="UTF-8">
+    <title>NODEMONKES</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body, html {
             margin: 0;
             padding: 0;
-            width: 100%;
             height: 100%;
             overflow: hidden;
+            background-color: #1E1E1E;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
         }
-        .image-container {
+        iframe {
+            border: none;
             width: 100%;
-            height: 180px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            overflow: hidden;
-            background: #000;
+            display: block;
         }
-
-        .animation-viewport {
-            position: absolute;
-            height: 168px;
-            width: 100%;
-            top: 50%;
-            transform: translateY(-50%);
-            overflow: hidden;
+        #header {
+            height: 170px;
         }
-
-        #animationCanvas {
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+        #content {
+            height: calc(100% - 170px);
+            overflow-y: scroll;
+            scrollbar-width: thin;
+        }
+        #content::-webkit-scrollbar {
+            width: 12px;
+        }
+        #content::-webkit-scrollbar-track {
+            background: #1E1E1E;
+        }
+        #content::-webkit-scrollbar-thumb {
+            background-color: #333;
+            border-radius: 6px;
+            border: 3px solid #1E1E1E;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100%;
+            font-size: 18px;
+            color: #FFFFFF;
         }
     </style>
 </head>
 <body>
-    <div class="image-container">
-        <div class="animation-viewport">
-            <canvas id="animationCanvas"></canvas>
-        </div>
-    </div>
+    <iframe id="header" src="about:blank" scrolling="no"></iframe>
+    <iframe id="content" src="about:blank" allow="same-origin" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"></iframe>
 
     <script>
-    const PARAMS = {
-        frameCount: 36,
-        frameDelay: 16,
-        rotationRange: 0.08,
-        pressDownStrength: 30,
-        insertionStrength: 40,
-        insertionAngle: 0.06,
-        squashStrength: 0.15,
-        displayDuration: 5000,
-        baseSize: 28,
-        hdScale: 6,
-        transitionDuration: 500,
-        nodDuration: 800,
-        exitDuration: 7500,
-        entranceDuration: 7500,
-        movementRange: 2.0,
-    };
-
-    const container = document.querySelector('.animation-viewport');
-    const canvas = document.getElementById('animationCanvas');
-    const ctx = canvas.getContext('2d', { 
-        alpha: true,
-        willReadFrequently: false 
-    });
-
-    // Set canvas size once and cache it
-    function calculateOptimalSize(height) {
-        return { width: container.clientWidth, height: height };
-    }
-    const size = calculateOptimalSize(container.clientHeight);
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-
-    // Use a separate offscreen canvas for image processing
-    const offscreenCanvas = new OffscreenCanvas(size.width, size.height);
-    const offscreenCtx = offscreenCanvas.getContext('2d', {
-        alpha: true,
-        willReadFrequently: true
-    });
-
-
-    const imageCache = new Map();
-
-    async function preloadImage(url) {
-        if (imageCache.has(url)) {
-            return imageCache.get(url);
+        function loadFrame(id, url) {
+            return new Promise((resolve, reject) => {
+                const frame = document.getElementById(id);
+                frame.onload = () => {
+                    console.log(`Frame ${id} loaded successfully`);
+                    resolve();
+                };
+                frame.onerror = () => {
+                    console.error(`Failed to load ${id}`);
+                    reject(new Error(`Failed to load ${id}`));
+                };
+                frame.src = url;
+            });
         }
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        const promise = new Promise((resolve, reject) => {
-            img.onload = () => {
-                imageCache.set(url, img);
-                resolve(img);
-            };
-            img.onerror = reject;
-        });
-        
-        img.src = url;
-        return promise;
-    }
 
-    let animationFrameId;
-    let lastFrameTime = performance.now();
-
-    function animate() {
-        animationFrameId = requestAnimationFrame(animateFrame);
-    }
-
-    function stopAnimation() {
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
+        async function loadContent() {
+            try {
+                await loadFrame('header', 'upper.html');
+                await loadFrame('content', 'lower.html');
+                console.log('Frames loaded successfully');
+            } catch (error) {
+                console.error('Error loading frames:', error);
+                document.body.innerHTML = `<div class="loading">Loading failed, please refresh the page and try again</div>`;
+            }
         }
-    }
 
-    function animateFrame() {
-        const currentTime = performance.now(); 
-        if (currentTime - lastFrameTime >= PARAMS.frameDelay) {
-            lastFrameTime = currentTime;
-            // Rest of your animation code would go here.  Example:
-            // ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // ctx.fillStyle = 'red';
-            // ctx.fillRect(10, 10, 50, 50);
-
-        }
-        animationFrameId = requestAnimationFrame(animateFrame);
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stopAnimation();
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => loadContent());
         } else {
-            animate();
+            setTimeout(loadContent, 0);
         }
-    });
-
-    window.addEventListener('blur', stopAnimation);
-    window.addEventListener('focus', animate);
-
-    animate();
-
     </script>
 </body>
 </html>
