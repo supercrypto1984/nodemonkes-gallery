@@ -1,446 +1,457 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NODEMONKES Browser</title>
-    <style>
-        body { 
-            margin: 0;
-            padding: 20px;
-            background-color: #1E1E1E;
-            color: #FFFFFF;
-            font-family: Arial, sans-serif;
-        }
-        h2 { 
-            font-size: 36px; 
-            margin: 20px 0;
-            color: #FFFFFF;
-        }
-        .search-container {
-            background: #2D2D2D;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .search-container select,
-        .search-container input {
-            padding: 12px;
-            border: 1px solid #3D3D3D;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #FFFFFF;
-            background-color: #3D3D3D;
-        }
-        .search-container input {
-            width: 200px;
-        }
-        .search-container button {
-            padding: 12px 24px;
-            background: #4D4D4D;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .search-container button:hover {
-            background: #5D5D5D;
-        }
-        .table-container {
-            background: #2D2D2D;
-            border-radius: 8px;
-            padding: 20px;
-            overflow-x: auto;
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            table-layout: fixed;
-        }
-        th, td { 
-            border: 1px solid #3D3D3D; 
-            padding: 12px; 
-            text-align: left;
-            vertical-align: top;
-            background: #2D2D2D;
-            color: #FFFFFF;
-        }
-        th { 
-            background: #3D3D3D; 
-            position: sticky;
-            top: 0;
-            font-weight: 600;
-            z-index: 1;
-        }
-        td {
-            overflow: hidden;
-            word-wrap: break-word;
-        }
-        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
-        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
-        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
-        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
-        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
-        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
-        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
-        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
-        
-        .color-bar { 
-            width: 20px;
-            height: 100px;
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .color-segment {
-            width: 100%;
-            height: 10px;
-        }
-        .monke-image {
-            image-rendering: pixelated;
-            width: 112px;
-            height: 112px;
-            display: block;
-            border-radius: 4px;
-        }
-        .script-pubkey {
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            white-space: pre-wrap;
-            word-break: break-all;
-            background: #3D3D3D;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        .traits-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .trait-tag {
-            background: #3D3D3D;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #FFFFFF;
-        }
-        .monke-image.error {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NODEMONKES Browser</title>
+  <style>
+      body { 
+          margin: 0;
+          padding: 10px;
+          background-color: #1E1E1E;
+          color: #FFFFFF;
+          font-family: Arial, sans-serif;
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - 20px);
+          overflow: hidden;
+      }
+      .content-wrapper {
+          display: flex;
+          flex-direction: column;
+          background: #2D2D2D;
+          border-radius: 8px;
+          height: 100%;
+          overflow: hidden;
+      }
+      .header-group {
+          background: #2D2D2D;
+          padding: 12px;
+          flex-shrink: 0;
+      }
+      h2 { 
+          font-size: 36px; 
+          margin: 0 0 10px 0; 
+          color: #FFFFFF;
+      }
+      .search-container {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          padding-bottom: 12px;
+      }
+      .search-container select,
+      .search-container input {
+          padding: 12px;
+          border: 1px solid #3D3D3D;
+          border-radius: 6px;
+          font-size: 14px;
+          color: #FFFFFF;
+          background-color: #3D3D3D;
+      }
+      .search-container input {
+          width: 200px;
+      }
+      .search-container button {
+          padding: 12px 24px;
+          background: #4D4D4D;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.2s;
+      }
+      .search-container button:hover {
+          background: #5D5D5D;
+      }
+      .table-container {
+          flex: 1;
+          overflow: auto;
+          position: relative;
+      }
+      table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          table-layout: fixed;
+      }
+      th, td { 
+          border: 1px solid #3D3D3D; 
+          padding: 12px; 
+          text-align: left;
+          vertical-align: top;
+          background: #2D2D2D;
+          color: #FFFFFF;
+          height: 112px; /* Match the height of monke-image */
+      }
+      thead { 
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: #2D2D2D;
+      }
+      th { 
+          background: #3D3D3D; 
+          font-weight: 600;
+          height: auto; /* Override the fixed height for header */
+      }
+      td {
+          overflow: hidden;
+          word-wrap: break-word;
+      }
+      th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
+      th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
+      th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
+      th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
+      th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
+      th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
+      th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
+      th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
+      
+      .color-bar { 
+          width: 20px;
+          height: 100px;
+          display: flex;
+          flex-direction: column;
+          border-radius: 4px;
+          overflow: hidden;
+      }
+      .color-segment {
+          width: 100%;
+          height: 10px;
+      }
+      .monke-image {
+          image-rendering: pixelated;
+          width: 112px;
+          height: 112px;
+          display: block;
+          border-radius: 4px;
+      }
+      .script-pubkey {
+          font-family: monospace;
+          font-size: 14px;
+          line-height: 1.4;
+          white-space: pre-wrap;
+          word-break: break-all;
+          background: #3D3D3D;
+          padding: 8px;
+          border-radius: 4px;
+      }
+      .traits-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+      }
+      .trait-tag {
+          background: #3D3D3D;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          color: #FFFFFF;
+      }
+      .monke-image.error {
+          display: none;
+      }
+  </style>
 </head>
 <body>
-    <h2 id="bodyTitle">All Bodies</h2>
-    <div class="search-container">
-        <select id="bodyFilter">
-            <option value="all">All Bodies</option>
-        </select>
-        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
-        <button onclick="filterMonkes()">Search</button>
-    </div>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>NODEMONKE</th>
-                    <th>COLOR</th>
-                    <th>TRAITS</th>
-                    <th>RANK</th>
-                    <th>INSCRIPTION #</th>
-                    <th>BLOCK HEIGHT</th>
-                    <th>SCRIPT PUBKEY</th>
-                </tr>
-            </thead>
-            <tbody id="monkesList"></tbody>
-        </table>
-    </div>
+  <div class="content-wrapper">
+      <div class="header-group">
+          <h2 id="bodyTitle">All Bodies</h2>
+          <div class="search-container">
+              <select id="bodyFilter">
+                  <option value="all">All Bodies</option>
+              </select>
+              <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
+              <button onclick="filterMonkes()">Search</button>
+          </div>
+      </div>
+      <div class="table-container">
+          <table>
+              <thead>
+                  <tr>
+                      <th>#</th>
+                      <th>NODEMONKE</th>
+                      <th>COLOR</th>
+                      <th>TRAITS</th>
+                      <th>RANK</th>
+                      <th>INSCRIPTION #</th>
+                      <th>BLOCK HEIGHT</th>
+                      <th>SCRIPT PUBKEY</th>
+                  </tr>
+              </thead>
+              <tbody id="monkesList"></tbody>
+          </table>
+      </div>
+  </div>
 
-    <script>
-        const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
-        const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
-        const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
-        const CACHE_VERSION = '1.0';
-        const BATCH_SIZE = 50; // Number of images to load in each batch
-        
-        let allMonkes = [];
-        let db;
-        let isBackgroundLoading = false;
-        let lastLoadedIndex = 0;
+  <script>
+      // JavaScript code remains unchanged
+      const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
+      const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
+      const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
+      const CACHE_VERSION = '1.0';
+      const BATCH_SIZE = 50;
+      
+      let allMonkes = [];
+      let db;
+      let isBackgroundLoading = false;
+      let lastLoadedIndex = 0;
 
-        // Initialize IndexedDB
-        const initDB = () => {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('NodmonkesDB', 1);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains('json')) {
-                        db.createObjectStore('json', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('images')) {
-                        db.createObjectStore('images', { keyPath: 'id' });
-                    }
-                };
-            });
-        };
+      // All existing JavaScript functions remain exactly the same
+      const initDB = () => {
+          return new Promise((resolve, reject) => {
+              const request = indexedDB.open('NodmonkesDB', 1);
+              
+              request.onerror = () => reject(request.error);
+              request.onsuccess = () => {
+                  db = request.result;
+                  resolve(db);
+              };
+              
+              request.onupgradeneeded = (event) => {
+                  const db = event.target.result;
+                  if (!db.objectStoreNames.contains('json')) {
+                      db.createObjectStore('json', { keyPath: 'id' });
+                  }
+                  if (!db.objectStoreNames.contains('images')) {
+                      db.createObjectStore('images', { keyPath: 'id' });
+                  }
+              };
+          });
+      };
 
-        // Cache JSON data
-        const cacheJSON = async (data) => {
-            const transaction = db.transaction(['json'], 'readwrite');
-            const store = transaction.objectStore('json');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.put({
-                    id: 'nodemonkes_data',
-                    data: data,
-                    timestamp: Date.now()
-                });
-                
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        };
+      const cacheJSON = async (data) => {
+          const transaction = db.transaction(['json'], 'readwrite');
+          const store = transaction.objectStore('json');
+          
+          return new Promise((resolve, reject) => {
+              const request = store.put({
+                  id: 'nodemonkes_data',
+                  data: data,
+                  timestamp: Date.now()
+              });
+              
+              request.onsuccess = () => resolve();
+              request.onerror = () => reject(request.error);
+          });
+      };
 
-        // Get cached JSON data
-        const getCachedJSON = async () => {
-            const transaction = db.transaction(['json'], 'readonly');
-            const store = transaction.objectStore('json');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.get('nodemonkes_data');
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        };
+      const getCachedJSON = async () => {
+          const transaction = db.transaction(['json'], 'readonly');
+          const store = transaction.objectStore('json');
+          
+          return new Promise((resolve, reject) => {
+              const request = store.get('nodemonkes_data');
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+          });
+      };
 
-        // Cache image
-        const cacheImage = async (id, blob) => {
-            const transaction = db.transaction(['images'], 'readwrite');
-            const store = transaction.objectStore('images');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.put({
-                    id: id,
-                    blob: blob,
-                    timestamp: Date.now()
-                });
-                
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        };
+      const cacheImage = async (id, blob) => {
+          const transaction = db.transaction(['images'], 'readwrite');
+          const store = transaction.objectStore('images');
+          
+          return new Promise((resolve, reject) => {
+              const request = store.put({
+                  id: id,
+                  blob: blob,
+                  timestamp: Date.now()
+              });
+              
+              request.onsuccess = () => resolve();
+              request.onerror = () => reject(request.error);
+          });
+      };
 
-        // Get cached image
-        const getCachedImage = async (id) => {
-            const transaction = db.transaction(['images'], 'readonly');
-            const store = transaction.objectStore('images');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.get(id);
-                request.onsuccess = () => resolve(request.result?.blob);
-                request.onerror = () => reject(request.error);
-            });
-        };
+      const getCachedImage = async (id) => {
+          const transaction = db.transaction(['images'], 'readonly');
+          const store = transaction.objectStore('images');
+          
+          return new Promise((resolve, reject) => {
+              const request = store.get(id);
+              request.onsuccess = () => resolve(request.result?.blob);
+              request.onerror = () => reject(request.error);
+          });
+      };
 
-        // Background image loading
-        const loadImagesInBackground = async () => {
-            if (isBackgroundLoading) return;
-            isBackgroundLoading = true;
+      const loadImagesInBackground = async () => {
+          if (isBackgroundLoading) return;
+          isBackgroundLoading = true;
 
-            try {
-                while (lastLoadedIndex < allMonkes.length) {
-                    const batchEnd = Math.min(lastLoadedIndex + BATCH_SIZE, allMonkes.length);
-                    const batch = allMonkes.slice(lastLoadedIndex, batchEnd);
+          try {
+              while (lastLoadedIndex < allMonkes.length) {
+                  const batchEnd = Math.min(lastLoadedIndex + BATCH_SIZE, allMonkes.length);
+                  const batch = allMonkes.slice(lastLoadedIndex, batchEnd);
 
-                    await Promise.all(batch.map(async (monke) => {
-                        try {
-                            const cachedImage = await getCachedImage(monke.id);
-                            if (!cachedImage) {
-                                const response = await fetch(`${IMAGE_URL}/${monke.id}.png`);
-                                const blob = await response.blob();
-                                await cacheImage(monke.id, blob);
-                            }
-                        } catch (error) {
-                            console.error(`Failed to cache image ${monke.id}:`, error);
-                        }
-                    }));
+                  await Promise.all(batch.map(async (monke) => {
+                      try {
+                          const cachedImage = await getCachedImage(monke.id);
+                          if (!cachedImage) {
+                              const response = await fetch(`${IMAGE_URL}/${monke.id}.png`);
+                              const blob = await response.blob();
+                              await cacheImage(monke.id, blob);
+                          }
+                      } catch (error) {
+                          console.error(`Failed to cache image ${monke.id}:`, error);
+                      }
+                  }));
 
-                    lastLoadedIndex = batchEnd;
-                    
-                    // Give the browser a chance to breathe
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            } finally {
-                isBackgroundLoading = false;
-            }
-        };
+                  lastLoadedIndex = batchEnd;
+                  
+                  await new Promise(resolve => setTimeout(resolve, 100));
+              }
+          } finally {
+              isBackgroundLoading = false;
+          }
+      };
 
-        function formatScriptPubkey(pubkey) {
-            const parts = pubkey.split(' ');
-            if (parts.length < 4) return pubkey;
-            
-            const op1 = parts[0];
-            const op2 = parts[1] + ' ' + parts[2];
-            const hash = parts[3];
-            
-            const chunkSize = 32;
-            const hashChunks = [];
-            for (let i = 0; i < hash.length; i += chunkSize) {
-                hashChunks.push(hash.slice(i, i + chunkSize));
-            }
-            
-            return `${op1}\n${op2}\n${hashChunks.join('\n')}`;
-        }
+      function formatScriptPubkey(pubkey) {
+          const parts = pubkey.split(' ');
+          if (parts.length < 4) return pubkey;
+          
+          const op1 = parts[0];
+          const op2 = parts[1] + ' ' + parts[2];
+          const hash = parts[3];
+          
+          const chunkSize = 32;
+          const hashChunks = [];
+          for (let i = 0; i < hash.length; i += chunkSize) {
+              hashChunks.push(hash.slice(i, i + chunkSize));
+          }
+          
+          return `${op1}
+${op2}
+${hashChunks.join('
+')}`;
+      }
 
-        function createColorBar(colors) {
-            return `<div class="color-bar">
-                ${colors.map(({r, g, b}) => 
-                    `<div class="color-segment" style="background-color: rgb(${r},${g},${b})"></div>`
-                ).join('')}
-            </div>`;
-        }
+      function createColorBar(colors) {
+          return `<div class="color-bar">
+              ${colors.map(({r, g, b}) => 
+                  `<div class="color-segment" style="background-color: rgb(${r},${g},${b})"></div>`
+              ).join('')}
+          </div>`;
+      }
 
-        // Modified createTableRow function
-        function createTableRow(monke) {
-            const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
+      function createTableRow(monke) {
+          const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
 
-            return `
-                <tr>
-                    <td>${monke.id}</td>
-                    <td><img src="${imageUrl}" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy" onerror="this.classList.add('error')"></td>
-                    <td>${createColorBar(monke.colors)}</td>
-                    <td>
-                        <div class="traits-list">
-                            ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
-                        </div>
-                    </td>
-                    <td>${monke.rank || 'N/A'}</td>
-                    <td>${monke.inscription}</td>
-                    <td>${monke.block}</td>
-                    <td class="script-pubkey">${formatScriptPubkey(monke.scriptPubkey)}</td>
-                </tr>
-            `;
-        }
+          return `
+              <tr>
+                  <td>${monke.id}</td>
+                  <td><img src="${imageUrl}" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy" onerror="this.classList.add('error')"></td>
+                  <td>${createColorBar(monke.colors)}</td>
+                  <td>
+                      <div class="traits-list">
+                          ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
+                      </div>
+                  </td>
+                  <td>${monke.rank || 'N/A'}</td>
+                  <td>${monke.inscription}</td>
+                  <td>${monke.block}</td>
+                  <td class="script-pubkey">${formatScriptPubkey(monke.scriptPubkey)}</td>
+              </tr>
+          `;
+      }
 
-        function handleSearchKeyUp(event) {
-            if (event.key === 'Enter') {
-                filterMonkes();
-            }
-        }
+      function handleSearchKeyUp(event) {
+          if (event.key === 'Enter') {
+              filterMonkes();
+          }
+      }
 
-        // Modified filterMonkes function
-        function filterMonkes() {
-            const searchTerm = document.getElementById('search').value.trim();
-            const selectedBody = document.getElementById('bodyFilter').value;
-            const tbody = document.getElementById('monkesList');
-            const bodyTitle = document.getElementById('bodyTitle');
-    
-            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
-    
-            let filtered = allMonkes;
-    
-            if (searchTerm) {
-                const searchNumber = parseInt(searchTerm);
-                filtered = allMonkes.filter(monke => 
-                    monke.id === searchNumber || monke.inscription === searchNumber
-                );
-            }
-    
-            if (selectedBody !== 'all') {
-                filtered = filtered.filter(monke => monke.body === selectedBody);
-            }
-    
-            filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
-    
-            tbody.innerHTML = filtered.map(createTableRow).join('');
+      function filterMonkes() {
+          const searchTerm = document.getElementById('search').value.trim();
+          const selectedBody = document.getElementById('bodyFilter').value;
+          const tbody = document.getElementById('monkesList');
+          const bodyTitle = document.getElementById('bodyTitle');
+  
+          bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+  
+          let filtered = allMonkes;
+  
+          if (searchTerm) {
+              const searchNumber = parseInt(searchTerm);
+              filtered = allMonkes.filter(monke => 
+                  monke.id === searchNumber || monke.inscription === searchNumber
+              );
+          }
+  
+          if (selectedBody !== 'all') {
+              filtered = filtered.filter(monke => monke.body === selectedBody);
+          }
+  
+          filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
+  
+          tbody.innerHTML = filtered.map(createTableRow).join('');
 
-            // Notify parent window that filtering is complete
-            window.parent.postMessage({ type: 'filterComplete' }, '*');
-        }
+          window.parent.postMessage({ type: 'filterComplete' }, '*');
+      }
 
-        // Modified initializePage function
-        async function initializePage() {
-            try {
-                await initDB();
-                
-                // Try to get cached JSON data first
-                const cachedData = await getCachedJSON();
-                
-                if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
-                    allMonkes = cachedData.data.nodemonkes;
-                } else {
-                    const response = await fetch(JSON_URL);
-                    if (!response.ok) throw new Error('Failed to load data');
-                    
-                    const data = await response.json();
-                    allMonkes = data.nodemonkes;
-                    
-                    // Cache the new data
-                    await cacheJSON(data);
-                }
-                
-                const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
-                const bodyFilter = document.getElementById('bodyFilter');
-                
-                bodyTypes.forEach(body => {
-                    const option = document.createElement('option');
-                    option.value = body;
-                    option.textContent = body;
-                    bodyFilter.appendChild(option);
-                });
-                
-                filterMonkes();
-                
-                // Start background loading of images
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => {
-                        loadImagesInBackground();
-                    });
-                } else {
-                    setTimeout(loadImagesInBackground, 0);
-                }
-                
-                document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
-                document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
-                
-                // Listen for messages from the parent window
-                window.addEventListener('message', (event) => {
-                    if (event.data.type === 'triggerFilter') {
-                        filterMonkes();
-                    }
-                });
-                
-            } catch (error) {
-                console.error('Failed to load data:', error);
-                document.getElementById('monkesList').innerHTML = 
-                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
-            }
-        }
+      async function initializePage() {
+          try {
+              await initDB();
+              
+              const cachedData = await getCachedJSON();
+              
+              if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
+                  allMonkes = cachedData.data.nodemonkes;
+              } else {
+                  const response = await fetch(JSON_URL);
+                  if (!response.ok) throw new Error('Failed to load data');
+                  
+                  const data = await response.json();
+                  allMonkes = data.nodemonkes;
+                  
+                  await cacheJSON(data);
+              }
+              
+              const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
+              const bodyFilter = document.getElementById('bodyFilter');
+              
+              bodyTypes.forEach(body => {
+                  const option = document.createElement('option');
+                  option.value = body;
+                  option.textContent = body;
+                  bodyFilter.appendChild(option);
+              });
+              
+              filterMonkes();
+              
+              if ('requestIdleCallback' in window) {
+                  requestIdleCallback(() => {
+                      loadImagesInBackground();
+                  });
+              } else {
+                  setTimeout(loadImagesInBackground, 0);
+              }
+              
+              document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
+              document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
+              
+              window.addEventListener('message', (event) => {
+                  if (event.data.type === 'triggerFilter') {
+                      filterMonkes();
+                  }
+              });
+              
+          } catch (error) {
+              console.error('Failed to load data:', error);
+              document.getElementById('monkesList').innerHTML = 
+                  '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
+          }
+      }
 
-        // Clean up cached data when the window is closed
-        window.addEventListener('beforeunload', () => {
-            if (db) {
-                const urls = document.querySelectorAll('img[src^="blob:"]');
-                urls.forEach(img => URL.revokeObjectURL(img.src));
-            }
-        });
+      window.addEventListener('beforeunload', () => {
+          if (db) {
+              const urls = document.querySelectorAll('img[src^="blob:"]');
+              urls.forEach(img => URL.revokeObjectURL(img.src));
+          }
+      });
 
-        initializePage();
-    </script>
+      initializePage();
+  </script>
 </body>
 </html>
 
