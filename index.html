@@ -1,20 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
-<!-- Previous head and style sections remain unchanged -->
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NODEMONKES</title>
     <style>
-        /* All previous styles remain unchanged */
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px;
+            max-width: 1400px;
+            margin: 40px auto;
+        }
+        h1 { 
+            font-size: 48px; 
+            margin-bottom: 0; 
+        }
+        h2 { 
+            font-size: 36px; 
+            color: #666; 
+            margin-top: 10px; 
+        }
+        .search-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container select,
+        .search-container input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-container input {
+            width: 200px;
+        }
+        .search-container button {
+            padding: 8px 16px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-container button:hover {
+            background: #555;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            table-layout: fixed;
+            background: white;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left;
+            vertical-align: top;
+        }
+        th { 
+            background: #f5f5f5; 
+            position: sticky;
+            top: 0;
+        }
+        td {
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
+        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
+        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
+        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
+        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
+        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
+        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
+        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
+        
+        .color-bar { 
+            width: 20px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .color-segment {
+            width: 100%;
+            height: 10px;
+        }
+        .monke-image {
+            image-rendering: pixelated;
+            width: 112px;
+            height: 112px;
+            display: block;
+        }
+        .script-pubkey {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #000;
+        }
+        tr.hidden {
+            display: none;
+        }
+        .monke-image.error {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>NODEMONKES</h1>
-    <h2 id="bodyTitle">All Bodies</h2>
+    <h2 id="bodyTitle">全部类型</h2>
     <div class="search-container">
         <select id="bodyFilter" onchange="filterMonkes()">
-            <option value="all">All Bodies</option>
+            <option value="all">全部类型</option>
         </select>
         <input type="text" id="search" placeholder="搜索 ID 或铭文号..." onkeyup="filterMonkes()">
         <button onclick="filterMonkes()">搜索</button>
@@ -24,11 +128,11 @@
             <tr>
                 <th>#</th>
                 <th>NODEMONKE</th>
-                <th>COLOR</th>
-                <th>TRAITS</th>
-                <th>RANK</th>
-                <th>INSCRIPTION #</th>
-                <th>BLOCK HEIGHT</th>
+                <th>颜色</th>
+                <th>特征</th>
+                <th>排名</th>
+                <th>铭文号</th>
+                <th>区块高度</th>
                 <th>SCRIPT PUBKEY</th>
             </tr>
         </thead>
@@ -88,11 +192,10 @@
             const tbody = document.getElementById('monkesList');
             const bodyTitle = document.getElementById('bodyTitle');
             
-            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+            bodyTitle.textContent = selectedBody === 'all' ? '全部类型' : selectedBody;
             
             let filtered = allMonkes;
             
-            // Only apply search if there's a search term
             if (searchTerm) {
                 const searchNumber = parseInt(searchTerm);
                 filtered = allMonkes.filter(monke => 
@@ -100,12 +203,10 @@
                 );
             }
             
-            // Apply body filter after search
             if (selectedBody !== 'all') {
                 filtered = filtered.filter(monke => monke.body === selectedBody);
             }
             
-            // Sort by rank
             filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
             
             tbody.innerHTML = filtered.map(createTableRow).join('');
