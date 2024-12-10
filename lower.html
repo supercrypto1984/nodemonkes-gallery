@@ -136,6 +136,17 @@
         .monke-image.error {
             display: none;
         }
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #FFFFFF;
+        }
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -161,7 +172,13 @@
                     <th>SCRIPT PUBKEY</th>
                 </tr>
             </thead>
-            <tbody id="monkesList"></tbody>
+            <tbody id="monkesList">
+                <tr>
+                    <td colspan="8">
+                        <div class="loading-indicator">Loading data...</div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
@@ -170,33 +187,44 @@
         const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
         const CACHE_VERSION = '1.0';
-        const BATCH_SIZE = 50; // Number of images to load in each batch
+        const BATCH_SIZE = 25; // Reduced batch size for better performance
+        const RETRY_DELAY = 2000; // 2 seconds delay between retries
+        const MAX_RETRIES = 3;
         
         let allMonkes = [];
         let db;
         let isBackgroundLoading = false;
         let lastLoadedIndex = 0;
 
-        // Initialize IndexedDB
+        // Initialize IndexedDB with error handling
         const initDB = () => {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open('NodmonkesDB', 1);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains('json')) {
-                        db.createObjectStore('json', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('images')) {
-                        db.createObjectStore('images', { keyPath: 'id' });
-                    }
-                };
+                try {
+                    const request = indexedDB.open('NodmonkesDB', 1);
+                    
+                    request.onerror = () => {
+                        console.warn('IndexedDB initialization failed, falling back to no cache');
+                        resolve(null); // Continue without IndexedDB
+                    };
+                    
+                    request.onsuccess = () => {
+                        db = request.result;
+                        resolve(db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('json')) {
+                            db.createObjectStore('json', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('images')) {
+                            db.createObjectStore('images', { keyPath: 'id' });
+                        }
+                    };
+                } catch (error) {
+                    console.warn('IndexedDB error:', error);
+                    resolve(null); // Continue without IndexedDB
+                }
             });
         };
 
@@ -291,6 +319,31 @@
             }
         };
 
+        // Fetch with retry logic
+        async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response;
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                    return fetchWithRetry(url, options, retries - 1);
+                }
+                throw error;
+            }
+        }
+
         function formatScriptPubkey(pubkey) {
             const parts = pubkey.split(' ');
             if (parts.length < 4) return pubkey;
@@ -316,10 +369,41 @@
             </div>`;
         }
 
-        // Modified createTableRow function
-        function createTableRow(monke) {
-            const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
+        // Modified image loading with fallback
+        async function loadImage(monkeId) {
+            try {
+                // Try to get from IndexedDB first
+                if (db) {
+                    const cachedImage = await getCachedImage(monkeId);
+                    if (cachedImage) {
+                        return URL.createObjectURL(cachedImage);
+                    }
+                }
 
+                // Fetch from network
+                const response = await fetchWithRetry(`${IMAGE_URL}/${monkeId}.png`);
+                const blob = await response.blob();
+                
+                // Cache if possible
+                if (db) {
+                    try {
+                        await cacheImage(monkeId, blob);
+                    } catch (error) {
+                        console.warn('Failed to cache image:', error);
+                    }
+                }
+                
+                return URL.createObjectURL(blob);
+            } catch (error) {
+                console.warn(`Failed to load image ${monkeId}:`, error);
+                return null;
+            }
+        }
+
+        // Modified table row creation with progressive loading
+        async function createTableRow(monke) {
+            const imageUrl = await loadImage(monke.id) || `${IMAGE_URL}/${monke.id}.png`;
+            
             return `
                 <tr>
                     <td>${monke.id}</td>
@@ -344,8 +428,8 @@
             }
         }
 
-        // Modified filterMonkes function
-        function filterMonkes() {
+        // Modified filter function with progressive loading
+        async function filterMonkes() {
             const searchTerm = document.getElementById('search').value.trim();
             const selectedBody = document.getElementById('bodyFilter').value;
             const tbody = document.getElementById('monkesList');
@@ -368,33 +452,62 @@
     
             filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
     
-            tbody.innerHTML = filtered.map(createTableRow).join('');
+            // Show loading state
+            tbody.innerHTML = '<tr><td colspan="8"><div class="loading-indicator">Loading data...</div></td></tr>';
+
+            // Load rows progressively
+            let html = '';
+            for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
+                const batch = filtered.slice(i, i + BATCH_SIZE);
+                const rows = await Promise.all(batch.map(createTableRow));
+                html += rows.join('');
+                tbody.innerHTML = html;
+                
+                // Give the browser a chance to render
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
 
             // Notify parent window that filtering is complete
             window.parent.postMessage({ type: 'filterComplete' }, '*');
         }
 
-        // Modified initializePage function
+        // Modified initialization with better error handling
         async function initializePage() {
             try {
+                // Initialize IndexedDB
                 await initDB();
                 
                 // Try to get cached JSON data first
-                const cachedData = await getCachedJSON();
-                
-                if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
-                    allMonkes = cachedData.data.nodemonkes;
-                } else {
-                    const response = await fetch(JSON_URL);
-                    if (!response.ok) throw new Error('Failed to load data');
-                    
-                    const data = await response.json();
-                    allMonkes = data.nodemonkes;
-                    
-                    // Cache the new data
-                    await cacheJSON(data);
+                let data;
+                if (db) {
+                    try {
+                        const cachedData = await getCachedJSON();
+                        if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
+                            data = cachedData.data;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to get cached data:', error);
+                    }
                 }
+
+                // Fetch from network if no cached data
+                if (!data) {
+                    const response = await fetchWithRetry(JSON_URL);
+                    data = await response.json();
+                    
+                    // Cache the new data if possible
+                    if (db) {
+                        try {
+                            await cacheJSON(data);
+                        } catch (error) {
+                            console.warn('Failed to cache JSON:', error);
+                        }
+                    }
+                }
+
+                allMonkes = data.nodemonkes;
                 
+                // Setup UI
                 const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
                 const bodyFilter = document.getElementById('bodyFilter');
                 
@@ -405,21 +518,14 @@
                     bodyFilter.appendChild(option);
                 });
                 
-                filterMonkes();
+                // Initial filter
+                await filterMonkes();
                 
-                // Start background loading of images
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => {
-                        loadImagesInBackground();
-                    });
-                } else {
-                    setTimeout(loadImagesInBackground, 0);
-                }
-                
+                // Setup event listeners
                 document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
                 document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
                 
-                // Listen for messages from the parent window
+                // Listen for messages from parent window
                 window.addEventListener('message', (event) => {
                     if (event.data.type === 'triggerFilter') {
                         filterMonkes();
@@ -427,19 +533,31 @@
                 });
                 
             } catch (error) {
-                console.error('Failed to load data:', error);
-                document.getElementById('monkesList').innerHTML = 
-                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
+                console.error('Failed to initialize:', error);
+                document.getElementById('monkesList').innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="error-message">
+                                Failed to load data. Please refresh the page to try again.<br>
+                                Error: ${error.message}
+                            </div>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
-        // Clean up cached data when the window is closed
-        window.addEventListener('beforeunload', () => {
+        // Clean up function
+        function cleanup() {
             if (db) {
                 const urls = document.querySelectorAll('img[src^="blob:"]');
                 urls.forEach(img => URL.revokeObjectURL(img.src));
             }
-        });
+        }
+
+        // Event listeners
+        window.addEventListener('beforeunload', cleanup);
+        window.addEventListener('unload', cleanup);
 
         initializePage();
     </script>
