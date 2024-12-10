@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NODEMONKES</title>
+    <style>
+        body, html { 
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1E1E1E;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+        }
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        h2 { 
+            font-size: 36px; 
+            color: white;
+            margin: 20px 0;
+        }
+        .search-container {
+            background: #2D2D2D;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .search-container select,
+        .search-container input {
+            padding: 12px;
+            border: 1px solid #3D3D3D;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #FFFFFF;
+            background-color: #3D3D3D;
+        }
+        .search-container input {
+            width: 200px;
+        }
+        .search-container button {
+            padding: 12px 24px;
+            background: #4D4D4D;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .search-container button:hover {
+            background: #5D5D5D;
+        }
+        .table-container {
+            background: #2D2D2D;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #2D2D2D;
+            table-layout: fixed;
+        }
+        th, td { 
+            border: 1px solid #3D3D3D; 
+            padding: 12px; 
+            text-align: left;
+            vertical-align: top;
+            color: #FFFFFF;
+        }
+        th { 
+            background: #3D3D3D; 
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            z-index: 1;
+        }
+        td {
+            overflow: hidden;
+            word-wrap: break-word;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
+        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
+        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
+        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
+        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
+        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
+        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
+        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
+        
+        .color-bar { 
+            width: 20px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .color-segment {
+            width: 100%;
+            height: 10px;
+        }
+        .monke-image {
+            image-rendering: pixelated;
+            width: 112px;
+            height: 112px;
+            display: block;
+            border-radius: 4px;
+        }
+        .script-pubkey {
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: #3D3D3D;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .traits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .trait-tag {
+            background: #3D3D3D;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #FFFFFF;
+        }
+        .monke-image.error {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <h2 id="bodyTitle">All Bodies</h2>
+        <div class="search-container">
+            <select id="bodyFilter" onchange="filterMonkes()">
+                <option value="all">All Bodies</option>
+            </select>
+            <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="filterMonkes()">
+            <button onclick="filterMonkes()">Search</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>NODEMONKE</th>
+                        <th>COLOR</th>
+                        <th>TRAITS</th>
+                        <th>RANK</th>
+                        <th>INSCRIPTION #</th>
+                        <th>BLOCK HEIGHT</th>
+                        <th>SCRIPT PUBKEY</th>
+                    </tr>
+                </thead>
+                <tbody id="monkesList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
+        const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
+        const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
+
+        let allMonkes = [];
+        
+        function formatScriptPubkey(pubkey) {
+            const parts = pubkey.split(' ');
+            if (parts.length < 4) return pubkey;
+            
+            const op1 = parts[0];
+            const op2 = parts[1] + ' ' + parts[2];
+            const hash = parts[3];
+            
+            const chunkSize = 32;
+            const hashChunks = [];
+            for (let i = 0; i < hash.length; i += chunkSize) {
+                hashChunks.push(hash.slice(i, i + chunkSize));
+            }
+            
+            return `${op1}\n${op2}\n${hashChunks.join('\n')}`;
+        }
+
+        function createColorBar(colors) {
+            return `<div class="color-bar">
+                ${colors.map(({r, g, b}) => 
+                    `<div class="color-segment" style="background-color: rgb(${r},${g},${b})"></div>`
+                ).join('')}
+            </div>`;
+        }
+
+        function createTableRow(monke) {
+            return `
+                <tr>
+                    <td>${monke.id}</td>
+                    <td><img src="${IMAGE_URL}/${monke.id}.png" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy"></td>
+                    <td>${createColorBar(monke.colors)}</td>
+                    <td>
+                        <div class="traits-list">
+                            ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td>${monke.rank || 'N/A'}</td>
+                    <td>${monke.inscription}</td>
+                    <td>${monke.block}</td>
+                    <td class="script-pubkey">${formatScriptPubkey(monke.scriptPubkey)}</td>
+                </tr>
+            `;
+        }
+
+        function filterMonkes() {
+            const searchTerm = document.getElementById('search').value.trim();
+            const selectedBody = document.getElementById('bodyFilter').value;
+            const tbody = document.getElementById('monkesList');
+            const bodyTitle = document.getElementById('bodyTitle');
+    
+            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+    
+            let filtered = allMonkes;
+    
+            if (searchTerm) {
+                const searchNumber = parseInt(searchTerm);
+                filtered = allMonkes.filter(monke => 
+                    monke.id === searchNumber || monke.inscription === searchNumber
+                );
+            }
+    
+            if (selectedBody !== 'all') {
+                filtered = filtered.filter(monke => monke.body === selectedBody);
+            }
+    
+            filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
+    
+            tbody.innerHTML = filtered.map(createTableRow).join('');
+        }
+
+        async function initializePage() {
+            try {
+                const response = await fetch(JSON_URL);
+                if (!response.ok) throw new Error('Failed to load data');
+                
+                const data = await response.json();
+                allMonkes = data.nodemonkes;
+                
+                const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
+                const bodyFilter = document.getElementById('bodyFilter');
+                
+                bodyTypes.forEach(body => {
+                    const option = document.createElement('option');
+                    option.value = body;
+                    option.textContent = body;
+                    bodyFilter.appendChild(option);
+                });
+                
+                filterMonkes();
+                
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                document.getElementById('monkesList').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
+            }
+        }
+
+        initializePage();
+
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.target.classList.add('error');
+            }
+        }, true);
+    </script>
+</body>
+</html>
