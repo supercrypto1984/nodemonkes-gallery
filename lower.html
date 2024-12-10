@@ -7,43 +7,43 @@
     <style>
         body { 
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background-color: #1E1E1E;
             color: #FFFFFF;
             font-family: Arial, sans-serif;
         }
         h2 { 
-            font-size: 36px; 
-            margin: 20px 0;
+            font-size: 24px; 
+            margin: 10px 0;
             color: #FFFFFF;
         }
         .search-container {
             background: #2D2D2D;
             border-radius: 8px;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             gap: 10px;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .search-container select,
         .search-container input {
-            padding: 12px;
+            padding: 8px;
             border: 1px solid #3D3D3D;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 14px;
             color: #FFFFFF;
             background-color: #3D3D3D;
         }
         .search-container input {
-            width: 200px;
+            width: 150px;
         }
         .search-container button {
-            padding: 12px 24px;
+            padding: 8px 16px;
             background: #4D4D4D;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.2s;
@@ -54,7 +54,7 @@
         .table-container {
             background: #2D2D2D;
             border-radius: 8px;
-            padding: 20px;
+            padding: 10px;
             overflow-x: auto;
         }
         table { 
@@ -64,7 +64,7 @@
         }
         th, td { 
             border: 1px solid #3D3D3D; 
-            padding: 12px; 
+            padding: 8px; 
             text-align: left;
             vertical-align: top;
             background: #2D2D2D;
@@ -81,18 +81,18 @@
             overflow: hidden;
             word-wrap: break-word;
         }
-        th:nth-child(1), td:nth-child(1) { width: 60px; } /* # */
-        th:nth-child(2), td:nth-child(2) { width: 120px; } /* NODEMONKE */
-        th:nth-child(3), td:nth-child(3) { width: 60px; } /* COLOR */
-        th:nth-child(4), td:nth-child(4) { width: 150px; } /* TRAITS */
-        th:nth-child(5), td:nth-child(5) { width: 80px; } /* RANK */
-        th:nth-child(6), td:nth-child(6) { width: 120px; } /* INSCRIPTION # */
-        th:nth-child(7), td:nth-child(7) { width: 100px; } /* BLOCK HEIGHT */
-        th:nth-child(8), td:nth-child(8) { width: 300px; } /* SCRIPT PUBKEY */
+        th:nth-child(1), td:nth-child(1) { width: 50px; } /* # */
+        th:nth-child(2), td:nth-child(2) { width: 100px; } /* NODEMONKE */
+        th:nth-child(3), td:nth-child(3) { width: 50px; } /* COLOR */
+        th:nth-child(4), td:nth-child(4) { width: 120px; } /* TRAITS */
+        th:nth-child(5), td:nth-child(5) { width: 60px; } /* RANK */
+        th:nth-child(6), td:nth-child(6) { width: 100px; } /* INSCRIPTION # */
+        th:nth-child(7), td:nth-child(7) { width: 80px; } /* BLOCK HEIGHT */
+        th:nth-child(8), td:nth-child(8) { width: 200px; } /* SCRIPT PUBKEY */
         
         .color-bar { 
             width: 20px;
-            height: 100px;
+            height: 80px;
             display: flex;
             flex-direction: column;
             border-radius: 4px;
@@ -100,39 +100,59 @@
         }
         .color-segment {
             width: 100%;
-            height: 10px;
+            height: 8px;
         }
         .monke-image {
             image-rendering: pixelated;
-            width: 112px;
-            height: 112px;
+            width: 90px;
+            height: 90px;
             display: block;
             border-radius: 4px;
         }
         .script-pubkey {
             font-family: monospace;
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.2;
             white-space: pre-wrap;
             word-break: break-all;
             background: #3D3D3D;
-            padding: 8px;
+            padding: 4px;
             border-radius: 4px;
         }
         .traits-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 2px;
         }
         .trait-tag {
             background: #3D3D3D;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-size: 10px;
             color: #FFFFFF;
         }
         .monke-image.error {
             display: none;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            background: #4D4D4D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .pagination button:disabled {
+            background: #2D2D2D;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -144,6 +164,8 @@
         </select>
         <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
         <button onclick="filterMonkes()">Search</button>
+        <button id="prevPage" onclick="changePage(-1)">Previous</button>
+        <button id="nextPage" onclick="changePage(1)">Next</button>
     </div>
     <div class="table-container">
         <table>
@@ -162,6 +184,9 @@
             <tbody id="monkesList"></tbody>
         </table>
     </div>
+    <div class="pagination">
+        <span id="pageInfo"></span>
+    </div>
 
     <script>
         const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
@@ -169,8 +194,11 @@
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
         const CACHE_VERSION = '1.0';
         const BATCH_SIZE = 50; // Number of images to load in each batch
+        const ITEMS_PER_PAGE = 5;
         
         let allMonkes = [];
+        let filteredMonkes = [];
+        let currentPage = 1;
         let db;
         let isBackgroundLoading = false;
         let lastLoadedIndex = 0;
@@ -346,30 +374,54 @@
         function filterMonkes() {
             const searchTerm = document.getElementById('search').value.trim();
             const selectedBody = document.getElementById('bodyFilter').value;
-            const tbody = document.getElementById('monkesList');
             const bodyTitle = document.getElementById('bodyTitle');
     
             bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
     
-            let filtered = allMonkes;
+            filteredMonkes = allMonkes;
     
             if (searchTerm) {
                 const searchNumber = parseInt(searchTerm);
-                filtered = allMonkes.filter(monke => 
+                filteredMonkes = allMonkes.filter(monke => 
                     monke.id === searchNumber || monke.inscription === searchNumber
                 );
             }
     
             if (selectedBody !== 'all') {
-                filtered = filtered.filter(monke => monke.body === selectedBody);
+                filteredMonkes = filteredMonkes.filter(monke => monke.body === selectedBody);
             }
     
-            filtered.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
-    
-            tbody.innerHTML = filtered.map(createTableRow).join('');
+            filteredMonkes.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
 
-            // Notify parent window that filtering is complete
-            window.parent.postMessage({ type: 'filterComplete' }, '*');
+            currentPage = 1;
+            updateTable();
+            updatePagination();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('monkesList');
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            const pageMonkes = filteredMonkes.slice(startIndex, endIndex);
+    
+            tbody.innerHTML = pageMonkes.map(createTableRow).join('');
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredMonkes.length / ITEMS_PER_PAGE);
+            const pageInfo = document.getElementById('pageInfo');
+            const prevButton = document.getElementById('prevPage');
+            const nextButton = document.getElementById('nextPage');
+
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            updateTable();
+            updatePagination();
         }
 
         // Modified initializePage function
@@ -403,7 +455,9 @@
                     bodyFilter.appendChild(option);
                 });
                 
-                filterMonkes();
+                filteredMonkes = allMonkes;
+                updateTable();
+                updatePagination();
                 
                 // Start background loading of images
                 if ('requestIdleCallback' in window) {
