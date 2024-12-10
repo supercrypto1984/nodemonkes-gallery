@@ -14,6 +14,7 @@
             display: flex;
             flex-direction: column;
             height: calc(100vh - 20px);
+            overflow: hidden;
         }
         .header-group {
             background: #2D2D2D;
@@ -63,6 +64,9 @@
             flex: 1;
             overflow: auto;
             position: relative;
+            padding-top: 48px; /* Height of the header */
+            scroll-padding-top: 48px;
+            scroll-snap-type: y mandatory;
         }
         table { 
             width: 100%; 
@@ -79,9 +83,10 @@
             height: 112px; /* Match the height of monke-image */
         }
         thead { 
-            position: sticky;
+            position: absolute;
             top: 0;
-            z-index: 2;
+            left: 0;
+            right: 0;
             background: #2D2D2D;
         }
         th { 
@@ -148,6 +153,9 @@
         }
         .monke-image.error {
             display: none;
+        }
+        tr {
+            scroll-snap-align: start;
         }
     </style>
 </head>
