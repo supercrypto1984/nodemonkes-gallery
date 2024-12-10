@@ -57,6 +57,7 @@
             padding: 20px;
             overflow: auto; /* Updated overflow style */
             position: relative;
+            height: calc(100vh - 280px); /* Account for header iframe and padding */
         }
         table { 
             width: 100%; 
@@ -81,6 +82,9 @@
             background: #3D3D3D; 
             font-weight: 600;
             border-bottom: 2px solid #4D4D4D; /* Updated border-bottom style */
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
         td {
             overflow: hidden;
