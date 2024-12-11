@@ -112,8 +112,8 @@
         }
         .monke-image {
             image-rendering: pixelated;
-            width: 96px; /* 调整图片大小 */
-            height: 96px; /* 调整图片大小 */
+            width: 112px;
+            height: 112px;
             display: block;
             border-radius: 4px;
             background-color: rgb(151, 123, 182);
@@ -372,7 +372,13 @@
 
         function createTableRow(monke) {
             const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
+            
+            // Calculate total count
+            const totalCount = Object.entries(monke.attributes)
+                .filter(([key]) => !key.endsWith('Count'))
+                .length;
 
+            // Get all traits including Count
             const traitsHtml = Object.entries(monke.attributes)
                 .filter(([key]) => !key.endsWith('Count'))
                 .map(([key, value]) => {
@@ -381,7 +387,8 @@
                     const isRare = parseFloat(percentage) < 1;
                     return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${percentage}%)</span>`;
                 })
-                .join('');
+                .join('') + 
+                `<span class="trait-tag">Count: ${totalCount} (${((totalCount / 5) * 100).toFixed(2)}%)</span>`;
 
             return `
                 <tr>
