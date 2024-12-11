@@ -1,329 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NODEMONKES Browser</title>
-    <style>
-        body { 
-            margin: 0;
-            padding: 10px;
-            background-color: #1E1E1E;
-            color: #FFFFFF;
-            font-family: Arial, sans-serif;
-        }
-        h2 { 
-            font-size: 24px; 
-            margin: 10px 0;
-            color: #FFFFFF;
-        }
-        .search-container {
-            background: #2D2D2D;
-            border-radius: 8px;
-            padding: 10px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .search-container select,
-        .search-container input {
-            padding: 8px;
-            border: 1px solid #3D3D3D;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #FFFFFF;
-            background-color: #3D3D3D;
-        }
-        .search-container input {
-            width: 150px;
-        }
-        .search-container button {
-            padding: 8px 16px;
-            background: #4D4D4D;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .search-container button:hover {
-            background: #5D5D5D;
-        }
-        .table-container {
-            background: #2D2D2D;
-            border-radius: 8px;
-            padding: 10px;
-            overflow-x: auto;
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            table-layout: fixed;
-        }
-        th, td { 
-            border: 1px solid #3D3D3D; 
-            padding: 8px; 
-            text-align: left;
-            vertical-align: top;
-            background: #2D2D2D;
-            color: #FFFFFF;
-            font-size: 16px;
-        }
-        th { 
-            background: #3D3D3D; 
-            position: sticky;
-            top: 0;
-            font-weight: 600;
-            z-index: 1;
-            font-size: 18px;
-        }
-        td {
-            overflow: hidden;
-            word-wrap: break-word;
-        }
-        tr { 
-            height: 160px;
-        }
-        thead tr {
-            height: 40px;
-        }
-        th:nth-child(1), td:nth-child(1) { width: 50px; }
-        th:nth-child(2), td:nth-child(2) { width: 100px; } 
-        th:nth-child(3), td:nth-child(3) { width: 80px; } 
-        th:nth-child(4), td:nth-child(4) { width: 200px; } 
-        th:nth-child(5), td:nth-child(5) { width: 60px; }
-        th:nth-child(6), td:nth-child(6) { width: 100px; }
-        th:nth-child(7), td:nth-child(7) { width: 80px; }
-        th:nth-child(8), td:nth-child(8) { width: 200px; }
-        
-        .color-bar { 
-            width: 20px;
-            height: 160px; 
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .color-segment {
-            width: 100%;
-            height: 16px; 
-        }
-        .monke-image {
-            image-rendering: pixelated;
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 4px;
-            background-color: rgb(151, 123, 182);
-        }
-        .script-pubkey {
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            white-space: pre-wrap;
-            word-break: break-all;
-            background: #3D3D3D;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        .traits-list {
-            display: flex;
-            flex-direction: column; 
-            gap: 4px;
-        }
-        .trait-tag {
-            background: #3D3D3D;
-            padding: 6px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-            color: #FFFFFF;
-            width: fit-content;
-        }
-        .trait-tag.rare {
-            color: #ff4444; 
-        }
-        .monke-image.error {
-            display: none;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 10px;
-            gap: 10px;
-        }
-        .pagination button {
-            padding: 5px 10px;
-            background: #4D4D4D;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .pagination button:disabled {
-            background: #2D2D2D;
-            cursor: not-allowed;
-        }
-        td:nth-child(5),
-        td:nth-child(6),
-        td:nth-child(7),
-        td:nth-child(8) {
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <h2 id="bodyTitle">All Bodies</h2>
-    <div class="search-container">
-        <select id="bodyFilter">
-            <option value="all">All Bodies</option>
-        </select>
-        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
-        <button onclick="filterMonkes()">Search</button>
-        <button id="prevPage" onclick="changePage(-1)">Previous</button>
-        <button id="nextPage" onclick="changePage(1)">Next</button>
-    </div>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>NODEMONKE</th>
-                    <th>COLOR</th>
-                    <th>TRAITS</th>
-                    <th>RANK</th>
-                    <th>INSCRIPTION #</th>
-                    <th>BLOCK HEIGHT</th>
-                    <th>SCRIPT PUBKEY</th>
-                </tr>
-            </thead>
-            <tbody id="monkesList"></tbody>
-        </table>
-    </div>
-    <div class="pagination">
-        <span id="pageInfo"></span>
-    </div>
+    
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            NODEMONKES Browser
+        </title>
+        <style>
+            body { margin: 0; padding: 10px; background-color: #1E1E1E; color: #FFFFFF;
+            font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; } h2
+            { font-size: 28px; margin: 10px 0; color: #FFFFFF; font-weight: 600; }
+            .search-container { background: #2D2D2D; border-radius: 8px; padding: 10px;
+            display: flex; gap: 10px; align-items: center; margin-bottom: 10px; } .search-container
+            select, .search-container input { padding: 8px; border: 1px solid #3D3D3D;
+            border-radius: 4px; font-size: 16px; color: #FFFFFF; background-color:
+            #3D3D3D; } .search-container input { width: 150px; } .search-container
+            button { padding: 8px 16px; background: #4D4D4D; color: white; border:
+            none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight:
+            500; transition: background-color 0.2s; } .search-container button:hover
+            { background: #5D5D5D; } .table-container { background: #2D2D2D; border-radius:
+            8px; padding: 10px; overflow-x: auto; } table { width: 100%; border-collapse:
+            collapse; table-layout: fixed; } th, td { border: 1px solid #3D3D3D; padding:
+            8px; text-align: left; vertical-align: top; background: #2D2D2D; color:
+            #FFFFFF; font-size: 16px; font-weight: 400; } th { background: #3D3D3D;
+            position: sticky; top: 0; font-weight: 600; z-index: 1; font-size: 18px;
+            } td { overflow: hidden; word-wrap: break-word; } tr { height: 180px; }
+            thead tr { height: 40px; } th:nth-child(1), td:nth-child(1) { width: 50px;
+            } th:nth-child(2), td:nth-child(2) { width: 100px; } th:nth-child(3), td:nth-child(3)
+            { width: 60px; } th:nth-child(4), td:nth-child(4) { width: 200px; } th:nth-child(5),
+            td:nth-child(5) { width: 60px; } th:nth-child(6), td:nth-child(6) { width:
+            100px; } th:nth-child(7), td:nth-child(7) { width: 80px; } th:nth-child(8),
+            td:nth-child(8) { width: 200px; } .color-bar { width: 30px; height: 120px;
+            display: flex; flex-direction: column; border-radius: 4px; overflow: hidden;
+            margin: 0 auto; } .color-segment { width: 100%; flex: 1; } .monke-image
+            { image-rendering: pixelated; width: 100%; height: 100%; display: block;
+            border-radius: 4px; background-color: rgb(151, 123, 182); } .script-pubkey
+            { font-family: monospace; font-size: 16px; line-height: 1.4; white-space:
+            pre-wrap; word-break: break-all; background: #3D3D3D; padding: 8px; border-radius:
+            4px; font-weight: 500; } .traits-list { display: flex; flex-direction:
+            column; gap: 4px; } .trait-item { background: #3D3D3D; padding: 6px 8px;
+            border-radius: 4px; font-size: 16px; font-family: monospace; color: #FFFFFF;
+            font-weight: 500; } .trait-item.rare { color: #ff4444; font-weight: 600;
+            } .monke-image.error { display: none; } .pagination { display: flex; justify-content:
+            center; align-items: center; margin-top: 10px; gap: 10px; } .pagination
+            button { padding: 5px 10px; background: #4D4D4D; color: white; border:
+            none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight:
+            500; } .pagination button:disabled { background: #2D2D2D; cursor: not-allowed;
+            } td:nth-child(5), td:nth-child(6), td:nth-child(7) { font-family: monospace;
+            font-size: 16px; text-align: center; font-weight: 500; } .color-info {
+            display: flex; flex-direction: column; align-items: center; height: 100%;
+            } .color-count { font-size: 22px; font-weight: bold; margin-bottom: 4px;
+            color: #FFFFFF; } .color-cell { text-align: center; padding: 4px; height:
+            100%; display: flex; flex-direction: column; align-items: center; }
+        </style>
+    </head>
+    
+    <body>
+        <h2 id="bodyTitle">
+            All Bodies
+        </h2>
+        <div class="search-container">
+            <select id="bodyFilter">
+                <option value="all">
+                    All Bodies
+                </option>
+            </select>
+            <input type="text" id="search" placeholder="Search ID or Inscription..."
+            onkeyup="handleSearchKeyUp(event)">
+            <button onclick="filterMonkes()">
+                Search
+            </button>
+            <button id="prevPage" onclick="changePage(-1)">
+                Previous
+            </button>
+            <button id="nextPage" onclick="changePage(1)">
+                Next
+            </button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            NODEMONKE
+                        </th>
+                        <th>
+                            COLOR
+                        </th>
+                        <th>
+                            TRAITS
+                        </th>
+                        <th>
+                            RANK
+                        </th>
+                        <th>
+                            INSCRIPTION #
+                        </th>
+                        <th>
+                            BLOCK HEIGHT
+                        </th>
+                        <th>
+                            SCRIPT PUBKEY
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="monkesList">
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span id="pageInfo">
+            </span>
+        </div>
+        <script>
+            const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
+            const JSON_URL = 'https://nodemonkes.4everland.store/transformed_metadata.json';
+            const IMAGE_URL = `https: //raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
+            const CACHE_VERSION = '2.0';
+            const BATCH_SIZE = 50;
+            const ITEMS_PER_PAGE = 5;
+            const TOTAL_MONKES = 10000;
 
-    <script>
-        const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
-        const JSON_URL = 'https://nodemonkes.4everland.store/transformed_metadata.json';
-        const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
-        const CACHE_VERSION = '2.0';
-        const BATCH_SIZE = 50;
-        const ITEMS_PER_PAGE = 5;
-        const TOTAL_MONKES = 10000;
-        
-        let allMonkes = [];
-        let filteredMonkes = [];
-        let currentPage = 1;
-        let db;
-        let isBackgroundLoading = false;
-        let lastLoadedIndex = 0;
+            let allMonkes = [];
+            let filteredMonkes = [];
+            let currentPage = 1;
+            let db;
+            let isBackgroundLoading = false;
+            let lastLoadedIndex = 0;
 
-        const initDB = () => {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('NodmonkesDB', 1);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains('json')) {
-                        db.createObjectStore('json', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('images')) {
-                        db.createObjectStore('images', { keyPath: 'id' });
-                    }
-                };
-            });
-        };
+            const initDB = () = >{
+                return new Promise((resolve, reject) = >{
+                    const request = indexedDB.open('NodmonkesDB', 1);
 
-        const cacheJSON = async (data) => {
-            const transaction = db.transaction(['json'], 'readwrite');
-            const store = transaction.objectStore('json');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.put({
-                    id: 'nodemonkes_data',
-                    data: data,
-                    version: CACHE_VERSION,
-                    timestamp: Date.now()
+                    request.onerror = () = >reject(request.error);
+                    request.onsuccess = () = >{
+                        db = request.result;
+                        resolve(db);
+                    };
+
+                    request.onupgradeneeded = (event) = >{
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('json')) {
+                            db.createObjectStore('json', {
+                                keyPath: 'id'
+                            });
+                        }
+                        if (!db.objectStoreNames.contains('images')) {
+                            db.createObjectStore('images', {
+                                keyPath: 'id'
+                            });
+                        }
+                    };
                 });
-                
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        };
+            };
 
-        const getCachedJSON = async () => {
-            const transaction = db.transaction(['json'], 'readonly');
-            const store = transaction.objectStore('json');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.get('nodemonkes_data');
-                request.onsuccess = () => {
-                    const result = request.result;
-                    if (result && result.version === CACHE_VERSION) {
-                        resolve(result);
-                    } else {
-                        resolve(null);
-                    }
-                };
-                request.onerror = () => reject(request.error);
-            });
-        };
+            const cacheJSON = async(data) = >{
+                const transaction = db.transaction(['json'], 'readwrite');
+                const store = transaction.objectStore('json');
 
-        const cacheImage = async (id, blob) => {
-            const transaction = db.transaction(['images'], 'readwrite');
-            const store = transaction.objectStore('images');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.put({
-                    id: id,
-                    blob: blob,
-                    timestamp: Date.now()
+                return new Promise((resolve, reject) = >{
+                    const request = store.put({
+                        id: 'nodemonkes_data',
+                        data: data,
+                        version: CACHE_VERSION,
+                        timestamp: Date.now()
+                    });
+
+                    request.onsuccess = () = >resolve();
+                    request.onerror = () = >reject(request.error);
                 });
-                
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        };
+            };
 
-        const getCachedImage = async (id) => {
-            const transaction = db.transaction(['images'], 'readonly');
-            const store = transaction.objectStore('images');
-            
-            return new Promise((resolve, reject) => {
-                const request = store.get(id);
-                request.onsuccess = () => resolve(request.result?.blob);
-                request.onerror = () => reject(request.error);
-            });
-        };
+            const getCachedJSON = async() = >{
+                const transaction = db.transaction(['json'], 'readonly');
+                const store = transaction.objectStore('json');
 
-        const loadImagesInBackground = async () => {
-            if (isBackgroundLoading) return;
-            isBackgroundLoading = true;
+                return new Promise((resolve, reject) = >{
+                    const request = store.get('nodemonkes_data');
+                    request.onsuccess = () = >{
+                        const result = request.result;
+                        if (result && result.version === CACHE_VERSION) {
+                            resolve(result);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = () = >reject(request.error);
+                });
+            };
 
-            try {
-                while (lastLoadedIndex < allMonkes.length) {
-                    const batchEnd = Math.min(lastLoadedIndex + BATCH_SIZE, allMonkes.length);
-                    const batch = allMonkes.slice(lastLoadedIndex, batchEnd);
+            const cacheImage = async(id, blob) = >{
+                const transaction = db.transaction(['images'], 'readwrite');
+                const store = transaction.objectStore('images');
 
-                    await Promise.all(batch.map(async (monke) => {
-                        try {
-                            const cachedImage = await getCachedImage(monke.id);
-                            if (!cachedImage) {
-                                const response = await fetch(`${IMAGE_URL}/${monke.id}.png`);
+                return new Promise((resolve, reject) = >{
+                    const request = store.put({
+                        id: id,
+                        blob: blob,
+                        timestamp: Date.now()
+                    });
+
+                    request.onsuccess = () = >resolve();
+                    request.onerror = () = >reject(request.error);
+                });
+            };
+
+            const getCachedImage = async(id) = >{
+                const transaction = db.transaction(['images'], 'readonly');
+                const store = transaction.objectStore('images');
+
+                return new Promise((resolve, reject) = >{
+                    const request = store.get(id);
+                    request.onsuccess = () = >resolve(request.result ? .blob);
+                    request.onerror = () = >reject(request.error);
+                });
+            };
+
+            const loadImagesInBackground = async() = >{
+                if (isBackgroundLoading) return;
+                isBackgroundLoading = true;
+
+                try {
+                    while (lastLoadedIndex < allMonkes.length) {
+                        const batchEnd = Math.min(lastLoadedIndex + BATCH_SIZE, allMonkes.length);
+                        const batch = allMonkes.slice(lastLoadedIndex, batchEnd);
+
+                        await Promise.all(batch.map(async(monke) = >{
+                            try {
+                                const cachedImage = await getCachedImage(monke.id);
+                                if (!cachedImage) {
+                                    const response = await fetch(`$ {
+                                        IMAGE_URL
+                                    }
+                                    /${monke.id}.png`);
                                 const blob = await response.blob();
                                 await cacheImage(monke.id, blob);
                             }
@@ -358,68 +271,156 @@
             return `${op1}\n${op2}\n${hashChunks.join('\n')}`;
         }
 
-        function createColorBar(colors) {
-            return `<div class="color-bar">
-                ${colors.map(({r, g, b}) => 
-                    `<div class="color-segment" style="background-color: rgb(${r},${g},${b})"></div>`
-                ).join('')}
-            </div>`;
-        }
+        async function getImageColors(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Could not get canvas context'));
+                        return;
+                    }
 
-        function calculatePercentage(count) {
-            return ((count / TOTAL_MONKES) * 100).toFixed(1);
-        }
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
 
-        function createTableRow(monke) {
-            const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
-            
-            
-            const totalCount = Object.entries(monke.attributes)
-                .filter(([key]) => !key.endsWith('Count'))
-                .length;
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const pixels = imageData.data;
+                    const colorMap = new Map();
 
+                    / / Analyze each pixel
+                                    for (let i = 0; i < pixels.length; i += 4) {
+                                        const r = pixels[i];
+                                        const g = pixels[i + 1];
+                                        const b = pixels[i + 2];
+                                        const a = pixels[i + 3];
+
+                                        // Skip transparent pixels
+                                        if (a === 0) continue;
+
+                                        const colorKey = `$ {
+                                            r
+                                        },
+                                        $ {
+                                            g
+                                        },
+                                        $ {
+                                            b
+                                        }`;
+                                        colorMap.set(colorKey, (colorMap.get(colorKey) || 0) + 1);
+                                    }
+
+                                    // Convert to array and sort by count
+                                    const colors = Array.from(colorMap.entries()).map(([color, count]) = >{
+                                        const[r, g, b] = color.split(',').map(Number);
+                                        return {
+                                            r,
+                                            g,
+                                            b,
+                                            count
+                                        };
+                                    }).sort((a, b) = >b.count - a.count); // Sort by frequency but don't limit the number
+                                    resolve(colors);
+                                };
+
+                                img.onerror = () = >{
+                                    reject(new Error('Failed to load image'));
+                                };
+
+                                img.src = imageUrl;
+                            });
+                        }
+
+                        async
+                        function createColorBar(imageUrl) {
+                            try {
+                                const colors = await getImageColors(imageUrl);
+
+                                return` < div class = "color-cell" > <div class = "color-count" > $ {
+                                    colors.length
+                                } < /div>
+                        <div class="color-bar">
+                            ${colors.map(color => 
+                                `<div class="color-segment" 
+                                    style="background-color: rgb(${color.r},${color.g},${color.b});"></div > `).join('')
+                            } < /div>
+                    </div > `;
+                        } catch(error) {
+                            console.error('Failed to analyze image colors:', error);
+                            return '<div class="color-cell"><div class="color-count">Error</div></div>';
+                        }
+                    }
+
+                    function calculatePercentage(count) {
+                        return ((count / TOTAL_MONKES) * 100).toFixed(1);
+                    }
+
+                    function createTableRow(monke) {
+                        const imageUrl = `$ {
+                            IMAGE_URL
+                        }
+                        /${monke.id}.png`;
             
             const traitsHtml = Object.entries(monke.attributes)
-                .filter(([key]) => !key.endsWith('Count'))
+                .filter(([key]) => !key.endsWith('Count') && key !== 'Count')
                 .map(([key, value]) => {
                     const count = monke.attributes[`${key}Count`];
-                    const percentage = (count / TOTAL_MONKES * 100).toFixed(2);
-                    const isRare = parseFloat(percentage) < 1;
-                    return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${percentage}%)</span>`;
-                })
-                .join('') + 
-                `<span class="trait-tag">Count: ${totalCount} (${((totalCount / 5) * 100).toFixed(2)}%)</span>`;
+                    const percentage = calculatePercentage(count);
+                    const isRare = percentage < 1;
+                    return `<div class="trait-item ${isRare ? 'rare' : ''}">${key}: ${value} (${percentage}%)</div > `;
+                    }).join('');
 
-            return `
-                <tr>
-                    <td>${monke.id}</td>
-                    <td><img src="${imageUrl}" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy" onerror="this.classList.add('error')"></td>
-                    <td>${createColorBar(monke.colors)}</td>
+                    // Add Count attribute
+                    const countValue = monke.attributes.Count;
+                    const countHtml = ` < div class = "trait-item" > Count: $ {
+                        countValue
+                    } < /div>`;
+
+            / / Create a placeholder
+                    for the color bar that will be updated const colorBarId = `color - bar - $ {
+                        monke.id
+                    }`;
+
+                    const row = ` < tr > <td > $ {
+                        monke.id
+                    } < /td>
+                    <td><img src="${imageUrl}" class="monke-image" alt="Nodemonke ${monke.id}" loading="lazy" onerror="this.classList.add('error')" onload="updateColorBar('${imageUrl}', '${colorBarId}')"></td > <td id = "${colorBarId}" > <div class = "color-cell" > <div class = "color-count" > Loading... < /div></div > </td>
                     <td>
                         <div class="traits-list">
                             ${traitsHtml}
-                        </div>
-                    </td>
-                    <td>${monke.rank || 'N/A'}</td>
+                            ${countHtml}
+                        </div > </td>
+                    <td>${monke.rank || 'N/A '}</td>
                     <td>${monke.inscription}</td>
                     <td>${monke.block}</td>
                     <td class="script-pubkey">${formatScriptPubkey(monke.scriptPubkey)}</td>
                 </tr>
             `;
+
+            return row;
+        }
+
+        async function updateColorBar(imageUrl, colorBarId) {
+            const colorBarHtml = await createColorBar(imageUrl);
+            document.getElementById(colorBarId).innerHTML = colorBarHtml;
         }
 
         function handleSearchKeyUp(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter ') {
                 filterMonkes();
             }
         }
 
         function filterMonkes() {
-            const searchTerm = document.getElementById('search').value.trim();
-            const selectedBody = document.getElementById('bodyFilter').value;
-            const bodyTitle = document.getElementById('bodyTitle');
+            const searchTerm = document.getElementById('search ').value.trim();
+            const selectedBody = document.getElementById('bodyFilter ').value;
+            const bodyTitle = document.getElementById('bodyTitle ');
 
-            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+            bodyTitle.textContent = selectedBody === 'all ' ? 'All Bodies ' : selectedBody;
 
             filteredMonkes = allMonkes;
 
@@ -430,9 +431,9 @@
                 );
             }
 
-            if (selectedBody !== 'all') {
+            if (selectedBody !== 'all ') {
                 filteredMonkes = filteredMonkes.filter(monke => 
-                    monke.attributes.Body === selectedBody
+                    (monke.attributes?.Body || monke.body) === selectedBody
                 );
             }
 
@@ -444,7 +445,7 @@
         }
 
         function updateTable() {
-            const tbody = document.getElementById('monkesList');
+            const tbody = document.getElementById('monkesList ');
             const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
             const endIndex = startIndex + ITEMS_PER_PAGE;
             const pageMonkes = filteredMonkes.slice(startIndex, endIndex);
@@ -454,9 +455,9 @@
 
         function updatePagination() {
             const totalPages = Math.ceil(filteredMonkes.length / ITEMS_PER_PAGE);
-            const pageInfo = document.getElementById('pageInfo');
-            const prevButton = document.getElementById('prevPage');
-            const nextButton = document.getElementById('nextPage');
+            const pageInfo = document.getElementById('pageInfo ');
+            const prevButton = document.getElementById('prevPage ');
+            const nextButton = document.getElementById('nextPage ');
 
             pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
             prevButton.disabled = currentPage === 1;
@@ -476,20 +477,27 @@
                 const cachedData = await getCachedJSON();
                 
                 if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
-                    allMonkes = cachedData.data;
+                    allMonkes = cachedData.data.nodemonkes || cachedData.data;
                 } else {
                     const response = await fetch(JSON_URL);
-                    if (!response.ok) throw new Error('Failed to load data');
+                    if (!response.ok) throw new Error('Failed to load data ');
                     
-                    allMonkes = await response.json();
-                    
-                    await cacheJSON(allMonkes);
+                    const jsonData = await response.json();
+                    allMonkes = jsonData.nodemonkes || jsonData;
                 }
+
+                // Ensure color data format is correct
+                allMonkes = allMonkes.map(monke => ({
+                    ...monke,
+                    colors: Array.isArray(monke.colors) ? monke.colors : 
+                            typeof monke.colors === 'object ' ? Object.values(monke.colors) : 
+                            []
+                }));
                 
-                const bodyTypes = [...new Set(allMonkes.map(m => m.attributes.Body))].sort();
-                const bodyFilter = document.getElementById('bodyFilter');
+                const bodyTypes = [...new Set(allMonkes.map(m => m.attributes?.Body || m.body))].sort();
+                const bodyFilter = document.getElementById('bodyFilter ');
                 
-                bodyFilter.innerHTML = '<option value="all">All Bodies</option>';
+                bodyFilter.innerHTML = ' < option value = "all" > All Bodies < /option>';
                 bodyTypes.forEach(body => {
                     const option = document.createElement('option');
                     option.value = body;
@@ -521,7 +529,7 @@
             } catch (error) {
                 console.error('Failed to load data:', error);
                 document.getElementById('monkesList').innerHTML = 
-                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
+                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td > </tr>';
             }
         }
 
@@ -533,7 +541,8 @@
         });
 
         initializePage();
-    </script>
-</body>
-</html>
+    /
+        </script>
+    </body>
 
+</html>
