@@ -377,9 +377,9 @@
                 .filter(([key]) => !key.endsWith('Count'))
                 .map(([key, value]) => {
                     const count = monke.attributes[`${key}Count`];
-                    const percentage = calculatePercentage(count);
+                    const percentage = (count / TOTAL_MONKES * 100).toFixed(2);
                     const isRare = parseFloat(percentage) < 1;
-                    return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${count} | ${percentage}%)</span>`;
+                    return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${percentage}%)</span>`;
                 })
                 .join('');
 
