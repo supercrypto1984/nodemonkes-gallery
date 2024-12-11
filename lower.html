@@ -522,7 +522,7 @@
             const selectedBody = document.getElementById('bodyFilter').value;
             const bodyTitle = document.getElementById('bodyTitle');
 
-            bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
+            bodyTitle.textContent = selectedBody === 'all' ? 'All Monkes' : selectedBody;
 
             filteredMonkes = allMonkes;
 
@@ -599,7 +599,7 @@
                 const bodyTypes = [...new Set(allMonkes.map(m => m.attributes?.Body || m.body))].sort();
                 const bodyFilter = document.getElementById('bodyFilter');
                 
-                bodyFilter.innerHTML = '<option value="all">All Bodies</option>';
+                bodyFilter.innerHTML = '<option value="all">All Monkes</option>';
                 bodyTypes.forEach(body => {
                     const option = document.createElement('option');
                     option.value = body;
