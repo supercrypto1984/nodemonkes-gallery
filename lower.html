@@ -51,10 +51,6 @@
         .search-container button:hover {
             background: #5D5D5D;
         }
-        .search-container button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         .table-container {
             background: #2D2D2D;
             border-radius: 8px;
@@ -91,7 +87,7 @@
             height: 160px;
         }
         th:nth-child(1), td:nth-child(1) { width: 50px; }
-        th:nth-child(2), td:nth-child(2) { width: 120px; }
+        th:nth-child(2), td:nth-child(2) { width: 100px; } /* 调整图片列宽度 */
         th:nth-child(3), td:nth-child(3) { width: 50px; }
         th:nth-child(4), td:nth-child(4) { width: 250px; }
         th:nth-child(5), td:nth-child(5) { width: 60px; }
@@ -113,8 +109,8 @@
         }
         .monke-image {
             image-rendering: pixelated;
-            width: 112px;
-            height: 112px;
+            width: 96px; /* 调整图片大小 */
+            height: 96px; /* 调整图片大小 */
             display: block;
             border-radius: 4px;
             background-color: rgb(151, 123, 182);
@@ -131,7 +127,7 @@
         }
         .traits-list {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* 确保traits竖直排列 */
             gap: 4px;
         }
         .trait-tag {
@@ -139,11 +135,12 @@
             padding: 6px 8px;
             border-radius: 4px;
             font-size: 14px;
+            font-family: Arial, sans-serif;
             color: #FFFFFF;
             width: fit-content;
         }
         .trait-tag.rare {
-            color: #ff4444;
+            color: #ff4444; /* 稀有trait的颜色 */
         }
         .monke-image.error {
             display: none;
@@ -176,12 +173,6 @@
             font-weight: bold;
             text-align: center;
         }
-        #loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
-            color: #FFFFFF;
-        }
     </style>
 </head>
 <body>
@@ -190,10 +181,9 @@
         <select id="bodyFilter">
             <option value="all">All Bodies</option>
         </select>
-        <input type="text" id="search" placeholder="Search ID or Inscription...">
+        <input type="text" id="search" placeholder="Search ID or Inscription..." onkeyup="handleSearchKeyUp(event)">
         <button onclick="filterMonkes()">Search</button>
         <button id="prevPage" onclick="changePage(-1)">Previous</button>
-        <span id="pageInfo"></span>
         <button id="nextPage" onclick="changePage(1)">Next</button>
     </div>
     <div class="table-container">
@@ -210,14 +200,11 @@
                     <th>SCRIPT PUBKEY</th>
                 </tr>
             </thead>
-            <tbody id="monkesList">
-                <tr>
-                    <td colspan="8">
-                        <div id="loading">Loading NODEMONKES data...</div>
-                    </td>
-                </tr>
-            </tbody>
+            <tbody id="monkesList"></tbody>
         </table>
+    </div>
+    <div class="pagination">
+        <span id="pageInfo"></span>
     </div>
 
     <script>
@@ -228,7 +215,7 @@
         const BATCH_SIZE = 50;
         const ITEMS_PER_PAGE = 5;
         const TOTAL_MONKES = 10000;
-
+        
         let allMonkes = [];
         let filteredMonkes = [];
         let currentPage = 1;
@@ -258,30 +245,7 @@
             });
         };
 
-        const clearCache = async () => {
-            if (!db) return;
-            
-            const transaction = db.transaction(['json', 'images'], 'readwrite');
-            const jsonStore = transaction.objectStore('json');
-            const imagesStore = transaction.objectStore('images');
-            
-            await Promise.all([
-                new Promise((resolve, reject) => {
-                    const request = jsonStore.clear();
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
-                }),
-                new Promise((resolve, reject) => {
-                    const request = imagesStore.clear();
-                    request.onsuccess = () => resolve();
-                    request.onerror = () => reject(request.error);
-                })
-            ]);
-        };
-
         const cacheJSON = async (data) => {
-            if (!db) return;
-            
             const transaction = db.transaction(['json'], 'readwrite');
             const store = transaction.objectStore('json');
             
@@ -299,8 +263,6 @@
         };
 
         const getCachedJSON = async () => {
-            if (!db) return null;
-            
             const transaction = db.transaction(['json'], 'readonly');
             const store = transaction.objectStore('json');
             
@@ -319,8 +281,6 @@
         };
 
         const cacheImage = async (id, blob) => {
-            if (!db) return;
-            
             const transaction = db.transaction(['images'], 'readwrite');
             const store = transaction.objectStore('images');
             
@@ -337,8 +297,6 @@
         };
 
         const getCachedImage = async (id) => {
-            if (!db) return null;
-            
             const transaction = db.transaction(['images'], 'readonly');
             const store = transaction.objectStore('images');
             
@@ -363,7 +321,6 @@
                             const cachedImage = await getCachedImage(monke.id);
                             if (!cachedImage) {
                                 const response = await fetch(`${IMAGE_URL}/${monke.id}.png`);
-                                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                                 const blob = await response.blob();
                                 await cacheImage(monke.id, blob);
                             }
@@ -373,6 +330,7 @@
                     }));
 
                     lastLoadedIndex = batchEnd;
+                    
                     await new Promise(resolve => setTimeout(resolve, 100));
                 }
             } finally {
@@ -453,11 +411,11 @@
 
             bodyTitle.textContent = selectedBody === 'all' ? 'All Bodies' : selectedBody;
 
-            filteredMonkes = [...allMonkes];
+            filteredMonkes = allMonkes;
 
             if (searchTerm) {
                 const searchNumber = parseInt(searchTerm);
-                filteredMonkes = filteredMonkes.filter(monke => 
+                filteredMonkes = allMonkes.filter(monke => 
                     monke.id === searchNumber || monke.inscription === searchNumber
                 );
             }
@@ -481,15 +439,6 @@
             const endIndex = startIndex + ITEMS_PER_PAGE;
             const pageMonkes = filteredMonkes.slice(startIndex, endIndex);
 
-            if (pageMonkes.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center;">No results found</td>
-                    </tr>
-                `;
-                return;
-            }
-
             tbody.innerHTML = pageMonkes.map(createTableRow).join('');
         }
 
@@ -510,71 +459,59 @@
             updatePagination();
         }
 
-        async function fetchData() {
-            try {
-                const response = await fetch(JSON_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                throw error;
-            }
-        }
-
         async function initializePage() {
             try {
                 await initDB();
                 
-                let data = null;
                 const cachedData = await getCachedJSON();
                 
-                if (cachedData && cachedData.data) {
-                    data = cachedData.data;
-                    console.log('Using cached data');
+                if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
+                    allMonkes = cachedData.data;
                 } else {
-                    console.log('Fetching fresh data');
-                    data = await fetchData();
-                    await cacheJSON(data);
+                    const response = await fetch(JSON_URL);
+                    if (!response.ok) throw new Error('Failed to load data');
+                    
+                    allMonkes = await response.json();
+                    
+                    await cacheJSON(allMonkes);
                 }
-                
-                if (!Array.isArray(data)) {
-                    throw new Error('Invalid data format');
-                }
-                
-                allMonkes = data;
-                console.log(`Loaded ${allMonkes.length} monkes`);
                 
                 const bodyTypes = [...new Set(allMonkes.map(m => m.attributes.Body))].sort();
                 const bodyFilter = document.getElementById('bodyFilter');
                 
-                bodyFilter.innerHTML = '<option value="all">All Bodies</option>' +
-                    bodyTypes.map(body => `<option value="${body}">${body}</option>`).join('');
+                bodyFilter.innerHTML = '<option value="all">All Bodies</option>';
+                bodyTypes.forEach(body => {
+                    const option = document.createElement('option');
+                    option.value = body;
+                    option.textContent = body;
+                    bodyFilter.appendChild(option);
+                });
                 
-                filteredMonkes = [...allMonkes];
+                filteredMonkes = allMonkes;
                 updateTable();
                 updatePagination();
+                
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(() => {
+                        loadImagesInBackground();
+                    });
+                } else {
+                    setTimeout(loadImagesInBackground, 0);
+                }
                 
                 document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
                 document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
                 
-                if ('requestIdleCallback' in window) {
-                    requestIdleCallback(() => loadImagesInBackground());
-                } else {
-                    setTimeout(loadImagesInBackground, 1000);
-                }
+                window.addEventListener('message', (event) => {
+                    if (event.data.type === 'triggerFilter') {
+                        filterMonkes();
+                    }
+                });
                 
             } catch (error) {
-                console.error('Failed to initialize:', error);
-                document.getElementById('monkesList').innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; color: #ff4444;">
-                            Failed to load data. Please check your connection and try again.
-                            <br>
-                            Error: ${error.message}
-                        </td>
-                    </tr>
-                `;
+                console.error('Failed to load data:', error);
+                document.getElementById('monkesList').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data. Please check the server connection.</td></tr>';
             }
         }
 
@@ -585,7 +522,6 @@
             }
         });
 
-        // Start the application
         initializePage();
     </script>
 </body>
