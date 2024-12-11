@@ -86,6 +86,9 @@
         tr { 
             height: 160px;
         }
+        thead tr {
+            height: 40px;
+        }
         th:nth-child(1), td:nth-child(1) { width: 50px; }
         th:nth-child(2), td:nth-child(2) { width: 100px; } /* 调整图片列宽度 */
         th:nth-child(3), td:nth-child(3) { width: 50px; }
@@ -376,7 +379,7 @@
                     const count = monke.attributes[`${key}Count`];
                     const percentage = calculatePercentage(count);
                     const isRare = parseFloat(percentage) < 1;
-                    return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${percentage}%)</span>`;
+                    return `<span class="trait-tag ${isRare ? 'rare' : ''}">${key}: ${value} (${count} | ${percentage}%)</span>`;
                 })
                 .join('');
 
