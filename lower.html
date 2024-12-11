@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NODEMONKES Browser</title>
     <style>
+        /* 保持原有的样式不变 */
         body { 
             margin: 0;
             padding: 10px;
@@ -196,7 +197,7 @@
 
     <script>
         const GITHUB_REPO = 'supercrypto1984/nodemonkes-gallery';
-        const JSON_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/refs/heads/main/nodemonkes_data.json`;
+        const JSON_URL = 'https://nodemonkes.4everland.store/transformed_metadata.json';
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
         const CACHE_VERSION = '1.0';
         const BATCH_SIZE = 50; // Number of images to load in each batch
@@ -352,6 +353,14 @@
         function createTableRow(monke) {
             const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
 
+            const traitsHtml = Object.entries(monke.attributes)
+                .filter(([key]) => !key.endsWith('Count'))
+                .map(([key, value]) => {
+                    const count = monke.attributes[`${key}Count`];
+                    return `<span class="trait-tag">${key}: ${value} (${count})</span>`;
+                })
+                .join('');
+
             return `
                 <tr>
                     <td>${monke.id}</td>
@@ -359,7 +368,7 @@
                     <td>${createColorBar(monke.colors)}</td>
                     <td>
                         <div class="traits-list">
-                            ${monke.traits.map(t => `<span class="trait-tag">${t.value}</span>`).join('')}
+                            ${traitsHtml}
                         </div>
                     </td>
                     <td>${monke.rank || 'N/A'}</td>
@@ -394,7 +403,9 @@
             }
     
             if (selectedBody !== 'all') {
-                filteredMonkes = filteredMonkes.filter(monke => monke.body === selectedBody);
+                filteredMonkes = filteredMonkes.filter(monke => 
+                    monke.attributes.Body === selectedBody
+                );
             }
     
             filteredMonkes.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
@@ -439,21 +450,21 @@
                 const cachedData = await getCachedJSON();
                 
                 if (cachedData && (Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000)) {
-                    allMonkes = cachedData.data.nodemonkes;
+                    allMonkes = cachedData.data;
                 } else {
                     const response = await fetch(JSON_URL);
                     if (!response.ok) throw new Error('Failed to load data');
                     
-                    const data = await response.json();
-                    allMonkes = data.nodemonkes;
+                    allMonkes = await response.json();
                     
                     // Cache the new data
-                    await cacheJSON(data);
+                    await cacheJSON(allMonkes);
                 }
                 
-                const bodyTypes = [...new Set(allMonkes.map(m => m.body))].sort();
+                const bodyTypes = [...new Set(allMonkes.map(m => m.attributes.Body))].sort();
                 const bodyFilter = document.getElementById('bodyFilter');
                 
+                bodyFilter.innerHTML = '<option value="all">All Bodies</option>';
                 bodyTypes.forEach(body => {
                     const option = document.createElement('option');
                     option.value = body;
@@ -477,13 +488,6 @@
                 document.getElementById('search').addEventListener('keyup', handleSearchKeyUp);
                 document.getElementById('bodyFilter').addEventListener('change', filterMonkes);
                 
-                // Listen for messages from the parent window
-                window.addEventListener('message', (event) => {
-                    if (event.data.type === 'triggerFilter') {
-                        filterMonkes();
-                    }
-                });
-                
             } catch (error) {
                 console.error('Failed to load data:', error);
                 document.getElementById('monkesList').innerHTML = 
@@ -503,4 +507,3 @@
     </script>
 </body>
 </html>
-
