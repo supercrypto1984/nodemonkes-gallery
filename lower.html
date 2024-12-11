@@ -90,9 +90,9 @@
             height: 40px;
         }
         th:nth-child(1), td:nth-child(1) { width: 50px; }
-        th:nth-child(2), td:nth-child(2) { width: 100px; } /* 调整图片列宽度 */
-        th:nth-child(3), td:nth-child(3) { width: 50px; }
-        th:nth-child(4), td:nth-child(4) { width: 250px; }
+        th:nth-child(2), td:nth-child(2) { width: 100px; } 
+        th:nth-child(3), td:nth-child(3) { width: 80px; } 
+        th:nth-child(4), td:nth-child(4) { width: 200px; } 
         th:nth-child(5), td:nth-child(5) { width: 60px; }
         th:nth-child(6), td:nth-child(6) { width: 100px; }
         th:nth-child(7), td:nth-child(7) { width: 80px; }
@@ -100,7 +100,7 @@
         
         .color-bar { 
             width: 20px;
-            height: 80px;
+            height: 160px; 
             display: flex;
             flex-direction: column;
             border-radius: 4px;
@@ -108,7 +108,7 @@
         }
         .color-segment {
             width: 100%;
-            height: 8px;
+            height: 16px; 
         }
         .monke-image {
             image-rendering: pixelated;
@@ -130,7 +130,7 @@
         }
         .traits-list {
             display: flex;
-            flex-direction: column; /* 确保traits竖直排列 */
+            flex-direction: column; 
             gap: 4px;
         }
         .trait-tag {
@@ -143,7 +143,7 @@
             width: fit-content;
         }
         .trait-tag.rare {
-            color: #ff4444; /* 稀有trait的颜色 */
+            color: #ff4444; 
         }
         .monke-image.error {
             display: none;
@@ -373,12 +373,12 @@
         function createTableRow(monke) {
             const imageUrl = `${IMAGE_URL}/${monke.id}.png`;
             
-            // Calculate total count
+            
             const totalCount = Object.entries(monke.attributes)
                 .filter(([key]) => !key.endsWith('Count'))
                 .length;
 
-            // Get all traits including Count
+            
             const traitsHtml = Object.entries(monke.attributes)
                 .filter(([key]) => !key.endsWith('Count'))
                 .map(([key, value]) => {
