@@ -236,7 +236,9 @@
         </table>
     </div>
     <div class="pagination">
+        <button id="prevPageBottom" onclick="changePage(-1)">Previous</button>
         <span id="pageInfo"></span>
+        <button id="nextPageBottom" onclick="changePage(1)">Next</button>
     </div>
 
     <script>
@@ -245,7 +247,7 @@
         const IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/images`;
         const CACHE_VERSION = '2.0';
         const BATCH_SIZE = 50;
-        const ITEMS_PER_PAGE = 5;
+        const ITEMS_PER_PAGE = 10;
         const TOTAL_MONKES = 10000;
         
         let allMonkes = [];
@@ -428,7 +430,7 @@
                             const [r, g, b] = color.split(',').map(Number);
                             return { r, g, b, count };
                         })
-                        .sort((a, b) => b.count - a.count); // Sort by frequency but don't limit the number
+                        .sort((a, b) => b.count - a.count);
 
                     resolve(colors);
                 };
@@ -478,11 +480,9 @@
                 })
                 .join('');
 
-            // Add Count attribute
             const countValue = monke.attributes.Count;
             const countHtml = `<div class="trait-item">Count: ${countValue}</div>`;
 
-            // Create a placeholder for the color bar that will be updated
             const colorBarId = `color-bar-${monke.id}`;
             
             const row = `
@@ -560,16 +560,21 @@
             const pageInfo = document.getElementById('pageInfo');
             const prevButton = document.getElementById('prevPage');
             const nextButton = document.getElementById('nextPage');
+            const prevButtonBottom = document.getElementById('prevPageBottom');
+            const nextButtonBottom = document.getElementById('nextPageBottom');
 
             pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
             prevButton.disabled = currentPage === 1;
             nextButton.disabled = currentPage === totalPages;
+            prevButtonBottom.disabled = currentPage === 1;
+            nextButtonBottom.disabled = currentPage === totalPages;
         }
 
         function changePage(direction) {
             currentPage += direction;
             updateTable();
             updatePagination();
+            window.scrollTo(0, 0);
         }
 
         async function initializePage() {
@@ -588,7 +593,6 @@
                     allMonkes = jsonData.nodemonkes || jsonData;
                 }
 
-                // Ensure color data format is correct
                 allMonkes = allMonkes.map(monke => ({
                     ...monke,
                     colors: Array.isArray(monke.colors) ? monke.colors : 
